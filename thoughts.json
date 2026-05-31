@@ -10,5 +10,9 @@
   {
     "time": "5/31/2026, 03:28:22 PM",
     "text": "Alright, I guess now we have persistence. That is a big step. It involves adding the server. And have each end point handled. Add, edit, delete. I guess I can make it a commit."
+  },
+  {
+    "time": "5/31/2026, 03:41:08 PM",
+    "text": "Ok, I guess this thing can start to be a real repository of thought.\nWell, I guess, why are we even here? Beside the freedom and the fun of adding feature on the fly, in 5 minutes, instead of waiting for  google to respond? That feels real good. But, the reason why I am here, is because of the back link feature, commenting feature, \n\n> You know, I am already thinking about the next schema. \nI saw there is a piece of text that I want to “reply” to, continue the thread to, so to speak.\nFor example, I might be reading the Zhao stuff, and I might want to append to that. \nOk, we add a book mark there, but I want to a way to be able to see here that I am linking to that. \nAnd I want a back link tracker at that Zhao link place. \n\nYou know that makes me think about how we can scale this development. Like there are all these feature ideas right? Some of them we may like, but I am anticipating a lot of them we won't like. And it is sort of mixed and matched in this mess. How can we keep them organized with git commits? Like I want to make it reliable. Perhaps LLM can just handle everything for us. Anyways. Just thinking about these things."
   }
 ]

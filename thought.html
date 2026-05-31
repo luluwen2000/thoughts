@@ -42,7 +42,11 @@
             thoughts.forEach(thought => {
                 const itemDiv = document.createElement('div');
                 itemDiv.id = `thought-${thought.index}`;
-                itemDiv.style.marginBottom = '20px';
+                itemDiv.style.border = '1px solid #ececec';
+                itemDiv.style.borderRadius = '8px';
+                itemDiv.style.padding = '12px 16px';
+                itemDiv.style.backgroundColor = '#ffffff';
+                itemDiv.style.marginBottom = '15px';
 
                 // Display area for text (respect newlines)
                 const p = document.createElement('p');
