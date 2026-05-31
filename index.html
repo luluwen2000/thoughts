@@ -1,16 +1,77 @@
-<p>
-    this is just an experiment
-</p>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Thoughts</title>
+</head>
+<body>
 
-<p>
-    this is another thought
-</p>
+    <input type="text" id="thoughtInput" placeholder="Enter text">
+    <button id="addBtn">Add</button>
 
-<p> perhaps, we want to make it a little faster, like each tag</p>
+    <div id="container"></div>
 
-<p> and perhaps, we want to make it latest first instead of oldest first, in terms of display order</p>
+    <script>
+        // Seed legacy thoughts from the original file (oldest to newest)
+        // With timestamps representing past dates/times
+        const thoughts = [
+            {
+                text: "and perhaps, we want to, format the html file a bit, though, perhaps in the future, we can only wholly interact with the document in the browser, instead of editing in the terminal like this",
+                time: new Date(Date.now() - 1000 * 60 * 10).toLocaleString()
+            },
+            {
+                text: "and perhaps, we want to make it latest first instead of oldest first, in terms of display order",
+                time: new Date(Date.now() - 1000 * 60 * 30).toLocaleString()
+            },
+            {
+                text: "perhaps, we want to make it a little faster, like each tag",
+                time: new Date(Date.now() - 1000 * 60 * 60).toLocaleString()
+            },
+            {
+                text: "this is another thought",
+                time: new Date(Date.now() - 1000 * 60 * 90).toLocaleString()
+            },
+            {
+                text: "this is just an experiment",
+                time: new Date(Date.now() - 1000 * 60 * 120).toLocaleString()
+            }
+        ];
 
-<p> and perhaps, we want to, format the html file a bit, though, perhaps in the future, we can only wholly interact with the document in the browser, instead of editing in the terminal like this</p>
+        const container = document.getElementById('container');
+        const input = document.getElementById('thoughtInput');
+        const button = document.getElementById('addBtn');
 
+        function render() {
+            container.innerHTML = '';
+            thoughts.forEach(thought => {
+                const p = document.createElement('p');
+                p.textContent = `${thought.text} (Created: ${thought.time})`;
+                container.appendChild(p);
+            });
+        }
 
+        function add() {
+            const val = input.value.trim();
+            if (val) {
+                // Prepend new thought to display in chronologically descending order (newest first)
+                thoughts.unshift({
+                    text: val,
+                    time: new Date().toLocaleString()
+                });
+                input.value = '';
+                render();
+            }
+        }
 
+        button.addEventListener('click', add);
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                add();
+            }
+        });
+
+        // Initial render
+        render();
+    </script>
+
+</body>
+</html>
