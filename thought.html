@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Thoughts</title>
+</head>
+<body>
+
+    <textarea id="thoughtInput" placeholder="Enter text" rows="3" cols="50" style="font-family: serif;"></textarea>
+    <button id="addBtn">Add</button>
+
+    <div id="container"></div>
+
+    <script>
+        const container = document.getElementById('container');
+        const input = document.getElementById('thoughtInput');
+        const button = document.getElementById('addBtn');
+
+        let thoughts = [];
+
+        // Load thoughts from the Python backend API
+        async function loadThoughts() {
+            try {
+                const response = await fetch('/api/thoughts');
+                if (!response.ok) throw new Error('Failed to fetch thoughts');
+                thoughts = await response.json();
+                render();
+            } catch (e) {
+                console.error("Error loading thoughts", e);
+                container.innerHTML = '<p style="color: red;">Error connecting to server. Make sure server.py is running.</p>';
+            }
+        }
+
+        // Render thoughts in the container
+        function render() {
+            container.innerHTML = '';
+            
+            if (thoughts.length === 0) {
+                container.innerHTML = '<p>No thoughts recorded yet.</p>';
+                return;
+            }
+
+            thoughts.forEach(thought => {
+                const itemDiv = document.createElement('div');
+                itemDiv.id = `thought-${thought.index}`;
+                itemDiv.style.marginBottom = '20px';
+
+                // Display area for text (respect newlines)
+                const p = document.createElement('p');
+                p.style.whiteSpace = 'pre-wrap';
+                p.style.margin = '0 0 5px 0';
+                p.textContent = thought.text;
+
+                // Meta & actions container
+                const metaSpan = document.createElement('span');
+                metaSpan.style.fontSize = '0.85em';
+                metaSpan.style.color = '#555';
+                metaSpan.innerHTML = `Created: ${thought.time} | `;
+
+                // Action buttons
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Edit';
+                editBtn.style.marginRight = '5px';
+                editBtn.onclick = () => startEdit(thought.index, thought.text, itemDiv, p, editBtn, deleteBtn);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.onclick = () => deleteThought(thought.index);
+
+                metaSpan.appendChild(editBtn);
+                metaSpan.appendChild(deleteBtn);
+
+                itemDiv.appendChild(p);
+                itemDiv.appendChild(metaSpan);
+                container.appendChild(itemDiv);
+            });
+        }
+
+        // Add a new thought
+        async function add() {
+            const val = input.value.trim();
+            if (!val) return;
+
+            try {
+                const response = await fetch('/api/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: val })
+                });
+                if (!response.ok) throw new Error('Failed to add thought');
+                input.value = '';
+                await loadThoughts();
+            } catch (e) {
+                alert("Error saving thought: " + e.message);
+            }
+        }
+
+        // Start editing inline in the browser
+        function startEdit(index, originalText, itemDiv, p, editBtn, deleteBtn) {
+            // Create edit textarea
+            const editArea = document.createElement('textarea');
+            editArea.rows = 3;
+            editArea.cols = 50;
+            editArea.style.fontFamily = 'serif';
+            editArea.style.display = 'block';
+            editArea.style.marginBottom = '5px';
+            editArea.value = originalText;
+
+            // Swap static paragraph with textarea
+            itemDiv.replaceChild(editArea, p);
+
+            // Change button behaviors
+            editBtn.textContent = 'Save';
+            editBtn.onclick = async () => {
+                const updatedText = editArea.value.trim();
+                if (!updatedText) return;
+                
+                try {
+                    const response = await fetch('/api/edit', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ index: index, text: updatedText })
+                    });
+                    if (!response.ok) throw new Error('Failed to update thought');
+                    await loadThoughts();
+                } catch (e) {
+                    alert("Error updating thought: " + e.message);
+                }
+            };
+
+            deleteBtn.textContent = 'Cancel';
+            deleteBtn.onclick = () => {
+                loadThoughts(); // Simply re-load to discard edits
+            };
+        }
+
+        // Delete a thought
+        async function deleteThought(index) {
+            if (!confirm("Are you sure you want to delete this thought?")) return;
+
+            try {
+                const response = await fetch('/api/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ index: index })
+                });
+                if (!response.ok) throw new Error('Failed to delete thought');
+                await loadThoughts();
+            } catch (e) {
+                alert("Error deleting thought: " + e.message);
+            }
+        }
+
+        button.addEventListener('click', add);
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                add();
+            }
+        });
+
+        // Load initially
+        loadThoughts();
+    </script>
+
+</body>
+</html>

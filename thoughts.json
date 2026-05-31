@@ -1,0 +1,26 @@
+[
+  {
+    "time": "2026-05-31 14:59:11",
+    "text": "and perhaps, we want to, format the html file a bit, though, perhaps in the future, we can only wholly interact with the document in the browser, instead of editing in the terminal like this"
+  },
+  {
+    "time": "2026-05-31 14:39:11",
+    "text": "and perhaps, we want to make it latest first instead of oldest first, in terms of display order"
+  },
+  {
+    "time": "2026-05-31 13:09:11",
+    "text": "this is a Flask-edited experiment!"
+  },
+  {
+    "time": "5/31/2026, 03:17:28 PM",
+    "text": "Live from localhost!\nLine 2 of this thought."
+  },
+  {
+    "time": "5/31/2026, 03:26:23 PM",
+    "text": "Flask and JSON are working perfectly!\nThis is a beautiful live test thought."
+  },
+  {
+    "time": "5/31/2026, 03:28:22 PM",
+    "text": "Alright, I guess now we have persistence. That is a big step. It involves adding the server. And have each end point handled. Add, edit, delete. I guess I can make it a commit."
+  }
+]
