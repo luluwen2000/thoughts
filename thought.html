@@ -48,29 +48,24 @@
                 const p = document.createElement('p');
                 p.style.whiteSpace = 'pre-wrap';
                 p.style.margin = '0 0 5px 0';
-                p.textContent = thought.text;
+                p.style.cursor = 'pointer';
+                p.title = 'Click to edit or delete';
+                
+                // Add the text content
+                p.textContent = thought.text + ' ';
 
-                // Meta & actions container
-                const metaSpan = document.createElement('span');
-                metaSpan.style.fontSize = '0.85em';
-                metaSpan.style.color = '#555';
-                metaSpan.innerHTML = `Created: ${thought.time} | `;
+                // Append the time inline inside a small span
+                const timeSpan = document.createElement('span');
+                timeSpan.style.fontSize = '0.8em';
+                timeSpan.style.color = '#777';
+                timeSpan.style.whiteSpace = 'nowrap';
+                timeSpan.textContent = `(${thought.time})`;
+                p.appendChild(timeSpan);
 
-                // Action buttons
-                const editBtn = document.createElement('button');
-                editBtn.textContent = 'Edit';
-                editBtn.style.marginRight = '5px';
-                editBtn.onclick = () => startEdit(thought.index, thought.text, itemDiv, p, editBtn, deleteBtn);
-
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'Delete';
-                deleteBtn.onclick = () => deleteThought(thought.index);
-
-                metaSpan.appendChild(editBtn);
-                metaSpan.appendChild(deleteBtn);
+                // Clicking the paragraph triggers inline editing
+                p.onclick = () => startEdit(thought.index, thought.text, itemDiv, p);
 
                 itemDiv.appendChild(p);
-                itemDiv.appendChild(metaSpan);
                 container.appendChild(itemDiv);
             });
         }
@@ -95,7 +90,10 @@
         }
 
         // Start editing inline in the browser
-        function startEdit(index, originalText, itemDiv, p, editBtn, deleteBtn) {
+        function startEdit(index, originalText, itemDiv, p) {
+            // Create a wrapper for the editor controls
+            const editWrapper = document.createElement('div');
+
             // Create edit textarea
             const editArea = document.createElement('textarea');
             editArea.rows = 3;
@@ -104,13 +102,15 @@
             editArea.style.display = 'block';
             editArea.style.marginBottom = '5px';
             editArea.value = originalText;
+            editWrapper.appendChild(editArea);
 
-            // Swap static paragraph with textarea
-            itemDiv.replaceChild(editArea, p);
+            // Create button controls container
+            const controls = document.createElement('div');
 
-            // Change button behaviors
-            editBtn.textContent = 'Save';
-            editBtn.onclick = async () => {
+            const saveBtn = document.createElement('button');
+            saveBtn.textContent = 'Save';
+            saveBtn.style.marginRight = '5px';
+            saveBtn.onclick = async () => {
                 const updatedText = editArea.value.trim();
                 if (!updatedText) return;
                 
@@ -127,10 +127,28 @@
                 }
             };
 
-            deleteBtn.textContent = 'Cancel';
-            deleteBtn.onclick = () => {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.style.marginRight = '5px';
+            deleteBtn.onclick = () => deleteThought(index);
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.onclick = () => {
                 loadThoughts(); // Simply re-load to discard edits
             };
+
+            controls.appendChild(saveBtn);
+            controls.appendChild(deleteBtn);
+            controls.appendChild(cancelBtn);
+            editWrapper.appendChild(controls);
+
+            // Swap static paragraph with the edit wrapper
+            itemDiv.replaceChild(editWrapper, p);
+            
+            // Auto-focus the textarea and put cursor at the end
+            editArea.focus();
+            editArea.setSelectionRange(originalText.length, originalText.length);
         }
 
         // Delete a thought
