@@ -25,10 +25,26 @@
   },
   {
     "time": "5/31/2026, 11:07:04 PM",
-    "text": "Let's try adding this feature.\nSo we have entries, right? \nThe entry might  be talking about  something. \nBut then you have another thought that you want to continue\n\nFor exampl"
+    "text": "Let's try adding this feature.\nSo we have entries, right? \nThe entry might  be talking about  something. \nBut then you have another thought that you want to continue\n\nFor example\n\nHmm, guys, what are we trying to do?\nI mean, given these units, entries, we want to form structures?\nI may want to link an earlier entry.\n\nI may link to multiple earlier entry.\n\nso first\neach entry should have a link\n\nnow, i can @ earlier entry. multiple entries\nand what i am imagining, is a kind of, thread graph \na <- b <- c\na <- c\nlike a topological sort graph?\n\nwhy would we want that? \na history of content perhaps?\n\ni don't know if it will work friend. \nit's just an idea\nperhaps i am just over enigneering it"
   },
   {
     "time": "5/31/2026, 11:09:26 PM",
     "text": "Perhaps we remove enter to save. I need that quite a lot. Perhaps we can do shift enter. Perhaps we can make it configurable. Do a json config. Anyways. Just an idea for now"
+  },
+  {
+    "time": "5/31/2026, 11:15:42 PM",
+    "text": "The  road to  knowledge is paved with disappointments\nKnowledge is hard to come by\n\nKarl Popper"
+  },
+  {
+    "time": "5/31/2026, 11:19:15 PM",
+    "text": "i shall always feel insecure\nit is always the beginning of the infinity\nin our infinite ignorance we are all equal"
+  },
+  {
+    "time": "5/31/2026, 11:25:45 PM",
+    "text": "let's, just think of something simple for now. let's just put our a first  step\n\nso for each entry,\nwe should have a list of links referring to this entry\nand we should have another list of links this entry refers to\neach entry of course should have an id, maybe number for now, maybe uid later, when we are trying to scale this thing\neach link should be its own proto/json object, the url, the kind of link, etc. but for now, maybe url is suffice, but we do want to contain it in an object for future metadata expansion."
+  },
+  {
+    "time": "5/31/2026, 11:25:48 PM",
+    "text": "microsyntax\ndsl. yet another thing to matain\nwriting code directly right here, in this environment\nclojure\nwhat would it be like\nthis textbox provides the api like lex and yaccs\n[["
   }
 ]

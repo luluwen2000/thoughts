@@ -5,8 +5,16 @@
 </head>
 <body>
 
-    <textarea id="thoughtInput" placeholder="Enter text" rows="3" cols="50" style="font-family: serif;"></textarea>
-    <button id="addBtn">Add</button>
+    <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
+        <div>
+            <textarea id="thoughtInput" placeholder="Enter text (Box 1)" rows="3" cols="50" style="font-family: serif; vertical-align: top;"></textarea>
+            <button id="addBtn" style="vertical-align: top;">Add</button>
+        </div>
+        <div>
+            <textarea id="thoughtInput2" placeholder="Enter text (Box 2)" rows="3" cols="50" style="font-family: serif; vertical-align: top;"></textarea>
+            <button id="addBtn2" style="vertical-align: top;">Add</button>
+        </div>
+    </div>
 
     <div id="container"></div>
 
@@ -14,6 +22,8 @@
         const container = document.getElementById('container');
         const input = document.getElementById('thoughtInput');
         const button = document.getElementById('addBtn');
+        const input2 = document.getElementById('thoughtInput2');
+        const button2 = document.getElementById('addBtn2');
 
         let thoughts = [];
 
@@ -74,9 +84,9 @@
             });
         }
 
-        // Add a new thought
-        async function add() {
-            const val = input.value.trim();
+        // Helper to add thought from a specific textarea
+        async function addFrom(textarea) {
+            const val = textarea.value.trim();
             if (!val) return;
 
             try {
@@ -86,11 +96,16 @@
                     body: JSON.stringify({ text: val })
                 });
                 if (!response.ok) throw new Error('Failed to add thought');
-                input.value = '';
+                textarea.value = '';
                 await loadThoughts();
             } catch (e) {
                 alert("Error saving thought: " + e.message);
             }
+        }
+
+        // Add a new thought
+        async function add() {
+            await addFrom(input);
         }
 
         // Start editing inline in the browser
@@ -173,6 +188,7 @@
         }
 
         button.addEventListener('click', add);
+        button2.addEventListener('click', () => addFrom(input2));
 
         // Load initially
         loadThoughts();
