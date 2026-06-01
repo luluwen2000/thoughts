@@ -173,12 +173,6 @@
         }
 
         button.addEventListener('click', add);
-        input.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                add();
-            }
-        });
 
         // Load initially
         loadThoughts();
