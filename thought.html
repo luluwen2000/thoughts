@@ -5,14 +5,30 @@
 </head>
 <body>
 
-    <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
-        <div>
-            <textarea id="thoughtInput" placeholder="Enter text (Box 1)" rows="3" cols="50" style="font-family: serif; vertical-align: top;"></textarea>
-            <button id="addBtn" style="vertical-align: top;">Add</button>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <textarea id="thoughtInput1" placeholder="Enter text (Box 1)" rows="3" style="font-family: serif; width: 100%; box-sizing: border-box;"></textarea>
+            <button id="addBtn1" style="align-self: flex-start;">Add</button>
         </div>
-        <div>
-            <textarea id="thoughtInput2" placeholder="Enter text (Box 2)" rows="3" cols="50" style="font-family: serif; vertical-align: top;"></textarea>
-            <button id="addBtn2" style="vertical-align: top;">Add</button>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <textarea id="thoughtInput2" placeholder="Enter text (Box 2)" rows="3" style="font-family: serif; width: 100%; box-sizing: border-box;"></textarea>
+            <button id="addBtn2" style="align-self: flex-start;">Add</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <textarea id="thoughtInput3" placeholder="Enter text (Box 3)" rows="3" style="font-family: serif; width: 100%; box-sizing: border-box;"></textarea>
+            <button id="addBtn3" style="align-self: flex-start;">Add</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <textarea id="thoughtInput4" placeholder="Enter text (Box 4)" rows="3" style="font-family: serif; width: 100%; box-sizing: border-box;"></textarea>
+            <button id="addBtn4" style="align-self: flex-start;">Add</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <textarea id="thoughtInput5" placeholder="Enter text (Box 5)" rows="3" style="font-family: serif; width: 100%; box-sizing: border-box;"></textarea>
+            <button id="addBtn5" style="align-self: flex-start;">Add</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <textarea id="thoughtInput6" placeholder="Enter text (Box 6)" rows="3" style="font-family: serif; width: 100%; box-sizing: border-box;"></textarea>
+            <button id="addBtn6" style="align-self: flex-start;">Add</button>
         </div>
     </div>
 
@@ -20,10 +36,6 @@
 
     <script>
         const container = document.getElementById('container');
-        const input = document.getElementById('thoughtInput');
-        const button = document.getElementById('addBtn');
-        const input2 = document.getElementById('thoughtInput2');
-        const button2 = document.getElementById('addBtn2');
 
         let thoughts = [];
 
@@ -105,7 +117,7 @@
 
         // Add a new thought
         async function add() {
-            await addFrom(input);
+            await addFrom(document.getElementById('thoughtInput1'));
         }
 
         // Start editing inline in the browser
@@ -187,8 +199,14 @@
             }
         }
 
-        button.addEventListener('click', add);
-        button2.addEventListener('click', () => addFrom(input2));
+        // Bind dynamic add click handlers for all 6 boxes in the grid
+        for (let i = 1; i <= 6; i++) {
+            const inputEl = document.getElementById(`thoughtInput${i}`);
+            const btnEl = document.getElementById(`addBtn${i}`);
+            if (inputEl && btnEl) {
+                btnEl.onclick = () => addFrom(inputEl);
+            }
+        }
 
         // Load initially
         loadThoughts();
