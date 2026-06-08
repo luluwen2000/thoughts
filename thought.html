@@ -413,6 +413,11 @@
                     copyBtn.textContent = 'Copy URL';
                     copyBtn.onclick = () => copyThoughtUrl(thought.id);
                     actionsDiv.appendChild(copyBtn);
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.onclick = () => deleteThought(thought.id);
+                    actionsDiv.appendChild(deleteBtn);
                 }
 
                 itemDiv.appendChild(actionsDiv);
