@@ -187,6 +187,47 @@ def spawn_thought():
     
     return jsonify({'status': 'success', 'thought': new_thought})
 
+@app.route('/api/refer', methods=['POST'])
+def refer_thought():
+    target_id = request.json.get('targetId') if request.json else None
+    text = request.json.get('text', '').strip() if request.json else ''
+    label = request.json.get('label', '').strip() if request.json else ''
+    
+    if not target_id or not text:
+        return jsonify({'error': 'Missing targetId or text'}), 400
+        
+    data = load_data()
+    
+    # Verify target exists
+    target = None
+    for item in data:
+        if item['id'] == target_id:
+            target = item
+            break
+            
+    if not target:
+        return jsonify({'error': 'Target thought not found'}), 404
+        
+    # Generate referring thought ID and new thought
+    source_id = str(uuid.uuid4())
+    now = datetime.datetime.now()
+    time_str = now.strftime('%m/%d/%Y, %I:%M:%S %p').lstrip('0').replace('/0', '/')
+    
+    conn_id = str(uuid.uuid4())
+    new_thought = {
+        'id': source_id,
+        'time': time_str,
+        'text': text,
+        'inputs': [],
+        'outputs': [{'id': conn_id, 'nodeId': target_id, 'label': label}]
+    }
+    
+    target['inputs'].append({'id': conn_id, 'nodeId': source_id, 'label': label})
+    data.append(new_thought)
+    save_data(data)
+    
+    return jsonify({'status': 'success', 'thought': new_thought})
+
 @app.route('/api/link', methods=['POST'])
 def link_thoughts():
     source_id = request.json.get('sourceId') if request.json else None

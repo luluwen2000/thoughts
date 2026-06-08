@@ -64,13 +64,13 @@
         </div>
     </div>
 
-    <!-- Spawn Child Dialog Modal -->
+    <!-- Spawn / Refer Dialog Modal -->
     <div id="spawn-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); display: none; align-items: center; justify-content: center; z-index: 1000; font-family: serif;">
         <div style="background: #ffffff; border: 1px solid #cccccc; border-radius: 8px; padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-            <div style="font-weight: bold; margin-bottom: 10px; font-size: 1.1em;">Spawn Connected Thought</div>
-            <div style="font-size: 0.85em; color: #666; margin-bottom: 12px; font-style: italic;">Parent: <span id="parent-preview"></span></div>
+            <div id="modal-title" style="font-weight: bold; margin-bottom: 10px; font-size: 1.1em;">Spawn Connected Thought</div>
+            <div style="font-size: 0.85em; color: #666; margin-bottom: 12px; font-style: italic;"><span id="modal-preview-label">Parent</span>: <span id="parent-preview"></span></div>
             <div style="margin-bottom: 12px;">
-                <label style="display: block; font-size: 0.85em; margin-bottom: 4px; font-weight: bold;">New Thought Content</label>
+                <label id="modal-text-label" style="display: block; font-size: 0.85em; margin-bottom: 4px; font-weight: bold;">New Thought Content</label>
                 <textarea id="spawn-text" placeholder="Write next thought..." rows="3" style="width: 100%; font-family: serif; box-sizing: border-box; border: 1px solid #cccccc; border-radius: 4px; padding: 6px;"></textarea>
             </div>
             <div style="margin-bottom: 12px;">
@@ -79,7 +79,7 @@
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px;">
                 <button id="spawn-cancel-btn">Cancel</button>
-                <button id="spawn-submit-btn">Spawn</button>
+                <button id="spawn-submit-btn">Submit</button>
             </div>
         </div>
     </div>
@@ -396,8 +396,13 @@
                 } else {
                     const spawnBtn = document.createElement('button');
                     spawnBtn.textContent = 'Spawn';
-                    spawnBtn.onclick = () => openSpawnModal(thought.id, thought.text);
+                    spawnBtn.onclick = () => openModal(thought.id, thought.text, 'spawn');
                     actionsDiv.appendChild(spawnBtn);
+
+                    const referBtn = document.createElement('button');
+                    referBtn.textContent = 'Refer';
+                    referBtn.onclick = () => openModal(thought.id, thought.text, 'refer');
+                    actionsDiv.appendChild(referBtn);
 
                     const linkBtn = document.createElement('button');
                     linkBtn.textContent = 'Link';
@@ -744,10 +749,34 @@
             }
         };
 
-        // Spawn child node features
-        function openSpawnModal(parentId, parentText) {
-            spawningParentId = parentId;
-            parentPreview.textContent = truncateText(parentText, 40);
+        // Spawn/Refer modal features
+        let activeModalMode = 'spawn';
+        let modalActiveId = null;
+
+        function openModal(id, text, mode) {
+            modalActiveId = id;
+            activeModalMode = mode;
+
+            const titleEl = document.getElementById('modal-title');
+            const previewLabelEl = document.getElementById('modal-preview-label');
+            const textLabelEl = document.getElementById('modal-text-label');
+            const submitBtn = document.getElementById('spawn-submit-btn');
+
+            if (mode === 'spawn') {
+                titleEl.textContent = 'Spawn Connected Thought';
+                previewLabelEl.textContent = 'Parent';
+                textLabelEl.textContent = 'New Thought Content';
+                submitBtn.textContent = 'Spawn';
+                spawnText.placeholder = 'Write next thought...';
+            } else {
+                titleEl.textContent = 'Create Thought Referring to';
+                previewLabelEl.textContent = 'Target';
+                textLabelEl.textContent = 'New Referring Thought Content';
+                submitBtn.textContent = 'Create';
+                spawnText.placeholder = 'Write referring thought...';
+            }
+
+            parentPreview.textContent = truncateText(text, 40);
             spawnText.value = '';
             spawnLabel.value = '';
             spawnModal.style.display = 'flex';
@@ -756,7 +785,7 @@
 
         spawnCancelBtn.onclick = () => {
             spawnModal.style.display = 'none';
-            spawningParentId = null;
+            modalActiveId = null;
         };
 
         spawnSubmitBtn.onclick = async () => {
@@ -765,22 +794,23 @@
 
             if (!textVal) return;
 
+            const endpoint = (activeModalMode === 'spawn') ? '/api/spawn' : '/api/refer';
+            const payload = (activeModalMode === 'spawn') 
+                ? { parentId: modalActiveId, text: textVal, label: labelVal }
+                : { targetId: modalActiveId, text: textVal, label: labelVal };
+
             try {
-                const response = await fetch('/api/spawn', {
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        parentId: spawningParentId,
-                        text: textVal,
-                        label: labelVal
-                    })
+                    body: JSON.stringify(payload)
                 });
 
-                if (!response.ok) throw new Error('Failed to spawn thought');
+                if (!response.ok) throw new Error('Failed to save thought');
 
                 spawnModal.style.display = 'none';
-                spawningParentId = null;
-                showToast("Thought spawned!");
+                modalActiveId = null;
+                showToast(activeModalMode === 'spawn' ? "Thought spawned!" : "Reference thought created!");
                 await loadThoughts();
             } catch (e) {
                 alert("Error: " + e.message);
