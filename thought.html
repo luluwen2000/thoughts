@@ -116,6 +116,20 @@
                             Sort by Time
                             <span class="active-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #4f46e5; display: none;"></span>
                         </div>
+                        <div id="sort-by-refs" style="
+                            padding: 8px 12px;
+                            font-size: 0.9em;
+                            cursor: pointer;
+                            border-radius: 6px;
+                            color: #334155;
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            transition: background-color 0.2s;
+                        ">
+                            Sort by References
+                            <span class="active-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #4f46e5; display: none;"></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -522,6 +536,8 @@
         function sortThoughts() {
             if (currentSortOrder === 'votes') {
                 thoughts.sort((a, b) => (b.votes || 0) - (a.votes || 0));
+            } else if (currentSortOrder === 'refs') {
+                thoughts.sort((a, b) => (b.inputs ? b.inputs.length : 0) - (a.inputs ? a.inputs.length : 0));
             } else {
                 thoughts.sort((a, b) => b.index - a.index);
             }
@@ -1805,6 +1821,7 @@
         const sortDropdown = document.getElementById('sort-dropdown');
         const sortByVotesOpt = document.getElementById('sort-by-votes');
         const sortByTimeOpt = document.getElementById('sort-by-time');
+        const sortByRefsOpt = document.getElementById('sort-by-refs');
 
         // Toggle sort dropdown
         sortMenuBtn.onclick = (e) => {
@@ -1824,16 +1841,24 @@
         function updateSortMenuUi() {
             const votesDot = sortByVotesOpt.querySelector('.active-dot');
             const timeDot = sortByTimeOpt.querySelector('.active-dot');
+            const refsDot = sortByRefsOpt.querySelector('.active-dot');
+            
+            votesDot.style.display = 'none';
+            timeDot.style.display = 'none';
+            refsDot.style.display = 'none';
+            
+            sortByVotesOpt.style.fontWeight = 'normal';
+            sortByTimeOpt.style.fontWeight = 'normal';
+            sortByRefsOpt.style.fontWeight = 'normal';
             
             if (currentSortOrder === 'votes') {
                 votesDot.style.display = 'inline-block';
-                timeDot.style.display = 'none';
                 sortByVotesOpt.style.fontWeight = 'bold';
-                sortByTimeOpt.style.fontWeight = 'normal';
+            } else if (currentSortOrder === 'refs') {
+                refsDot.style.display = 'inline-block';
+                sortByRefsOpt.style.fontWeight = 'bold';
             } else {
-                votesDot.style.display = 'none';
                 timeDot.style.display = 'inline-block';
-                sortByVotesOpt.style.fontWeight = 'normal';
                 sortByTimeOpt.style.fontWeight = 'bold';
             }
         }
@@ -1849,6 +1874,7 @@
         }
         setupSortOptionHover(sortByVotesOpt);
         setupSortOptionHover(sortByTimeOpt);
+        setupSortOptionHover(sortByRefsOpt);
         
         sortMenuBtn.onmouseenter = () => {
             sortMenuBtn.style.backgroundColor = '#f1f5f9';
@@ -1868,6 +1894,14 @@
 
         sortByTimeOpt.onclick = () => {
             currentSortOrder = 'time';
+            updateSortMenuUi();
+            sortThoughts();
+            render();
+            sortDropdown.style.display = 'none';
+        };
+
+        sortByRefsOpt.onclick = () => {
+            currentSortOrder = 'refs';
             updateSortMenuUi();
             sortThoughts();
             render();
