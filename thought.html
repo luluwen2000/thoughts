@@ -40,13 +40,7 @@
         </div>
     </div>
 
-    <!-- Active Linking Mode Banner -->
-    <div id="linking-banner-el" style="display: none; justify-content: space-between; align-items: center; background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; font-size: 0.9em; font-family: serif;">
-        <div>
-            <strong>Linking Mode Active:</strong> Choose a card from the feed to connect from the source thought.
-        </div>
-        <button id="cancel-linking-btn" style="cursor: pointer;">Cancel</button>
-    </div>
+
 
     <!-- Layout: Left side feed, Right side Graph -->
     <div style="display: flex; gap: 20px; align-items: flex-start;">
@@ -134,21 +128,7 @@
         </div>
     </div>
 
-    <!-- Create Link Label Dialog Modal -->
-    <div id="link-label-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); display: none; align-items: center; justify-content: center; z-index: 1000; font-family: serif;">
-        <div style="background: #ffffff; border: 1px solid #cccccc; border-radius: 8px; padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-            <div style="font-weight: bold; margin-bottom: 10px; font-size: 1.1em;">Connect Thoughts</div>
-            <div style="font-size: 0.85em; color: #666; margin-bottom: 12px; font-style: italic;">Link: <span id="link-source-preview"></span> &rarr; <span id="link-target-preview"></span></div>
-            <div style="margin-bottom: 12px;">
-                <label style="display: block; font-size: 0.85em; margin-bottom: 4px; font-weight: bold;">Connection Label (Optional)</label>
-                <input type="text" id="link-label-input" placeholder="e.g. relates to, references" style="width: 100%; box-sizing: border-box; padding: 6px; border: 1px solid #cccccc; border-radius: 4px; font-family: serif;">
-            </div>
-            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px;">
-                <button id="link-label-cancel">Cancel</button>
-                <button id="link-label-submit">Connect</button>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Bulk Actions Floating Bar -->
     <div id="bulk-actions-bar" style="
@@ -430,15 +410,7 @@
         const spawnDirectionPreview = document.getElementById('spawn-direction-preview');
         const spawnDirectionPreviewBox = document.getElementById('spawn-direction-preview-box');
 
-        const linkLabelModal = document.getElementById('link-label-modal');
-        const linkSourcePreview = document.getElementById('link-source-preview');
-        const linkTargetPreview = document.getElementById('link-target-preview');
-        const linkLabelInput = document.getElementById('link-label-input');
-        const linkLabelCancel = document.getElementById('link-label-cancel');
-        const linkLabelSubmit = document.getElementById('link-label-submit');
 
-        const linkingBannerEl = document.getElementById('linking-banner-el');
-        const cancelLinkingBtn = document.getElementById('cancel-linking-btn');
 
         // Bulk action elements
         const bulkActionsBar = document.getElementById('bulk-actions-bar');
@@ -467,9 +439,6 @@
         let thoughts = [];
         let network = null;
         let focusedThoughtId = getFocusedThoughtId();
-        let linkingSourceId = null;
-        let linkingTargetId = null;
-        let spawningParentId = null;
         let selectedThoughtIds = new Set();
         let selectedExistingTargetId = null;
         let previousFocusedThoughtId = null;
@@ -496,12 +465,87 @@
             }, 2500);
         }
 
+        const localStorageKey = 'thoughts_user_votes';
+        function getUserVotes() {
+            try {
+                return JSON.parse(localStorage.getItem(localStorageKey)) || {};
+            } catch (e) {
+                return {};
+            }
+        }
+        function setUserVote(thoughtId, direction) {
+            const votes = getUserVotes();
+            if (direction) {
+                votes[thoughtId] = direction;
+            } else {
+                delete votes[thoughtId];
+            }
+            localStorage.setItem(localStorageKey, JSON.stringify(votes));
+        }
+
+        async function vote(thoughtId, type) {
+            const userVotes = getUserVotes();
+            const currentVote = userVotes[thoughtId] || null;
+            let delta = 0;
+
+            if (type === 'up') {
+                if (currentVote === 'up') {
+                    delta = -1;
+                    setUserVote(thoughtId, null);
+                } else if (currentVote === 'down') {
+                    delta = 2;
+                    setUserVote(thoughtId, 'up');
+                } else {
+                    delta = 1;
+                    setUserVote(thoughtId, 'up');
+                }
+            } else if (type === 'down') {
+                if (currentVote === 'down') {
+                    delta = 1;
+                    setUserVote(thoughtId, null);
+                } else if (currentVote === 'up') {
+                    delta = -2;
+                    setUserVote(thoughtId, 'down');
+                } else {
+                    delta = -1;
+                    setUserVote(thoughtId, 'down');
+                }
+            }
+
+            const thought = thoughts.find(t => t.id === thoughtId);
+            if (thought) {
+                thought.votes = (thought.votes || 0) + delta;
+                thoughts.sort((a, b) => (b.votes || 0) - (a.votes || 0));
+                render();
+            }
+
+            try {
+                const response = await fetch('/api/vote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: thoughtId, delta: delta })
+                });
+                if (!response.ok) throw new Error('Failed to submit vote');
+                await loadThoughts();
+            } catch (e) {
+                console.error("Error submitting vote:", e);
+                if (thought) {
+                    thought.votes = (thought.votes || 0) - delta;
+                    setUserVote(thoughtId, currentVote);
+                    thoughts.sort((a, b) => (b.votes || 0) - (a.votes || 0));
+                    render();
+                }
+                alert("Failed to submit vote: " + e.message);
+            }
+        }
+
         // Load thoughts from the Python backend API
         async function loadThoughts() {
             try {
                 const response = await fetch('/api/thoughts');
                 if (!response.ok) throw new Error('Failed to fetch thoughts');
                 thoughts = await response.json();
+                thoughts.sort((a, b) => (b.votes || 0) - (a.votes || 0));
                 
                 focusedThoughtId = getFocusedThoughtId();
                 
@@ -533,7 +577,6 @@
 
             thoughts.forEach(thought => {
                 const isFocused = thought.id === focusedThoughtId;
-                const isSourceNode = thought.id === linkingSourceId;
 
                 const itemDiv = document.createElement('div');
                 itemDiv.id = `thought-${thought.id}`;
@@ -541,7 +584,7 @@
                 
                 const isSelected = selectedThoughtIds.has(thought.id);
                 
-                // Selection / Focus / Linking Card Styling hierarchy
+                // Selection / Focus Card Styling hierarchy
                 let borderStyle = '1px solid #ececec';
                 let bgStyle = '#ffffff';
                 let shadowStyle = 'none';
@@ -550,14 +593,6 @@
                     borderStyle = '1px solid #818cf8';
                     bgStyle = '#f5f3ff';
                     shadowStyle = '0 4px 12px rgba(79, 70, 229, 0.08)';
-                } else if (linkingSourceId) {
-                    if (isSourceNode) {
-                        borderStyle = '1px dashed #b45309';
-                        bgStyle = '#fffbeb';
-                    } else {
-                        borderStyle = '1px solid #10b981';
-                        bgStyle = '#f0fdf4';
-                    }
                 } else if (isFocused) {
                     borderStyle = '1px solid #999999';
                     bgStyle = '#fafafa';
@@ -618,6 +653,126 @@
                 };
                 itemDiv.appendChild(checkboxContainer);
 
+                // Two-Column Flex Container
+                const cardFlex = document.createElement('div');
+                cardFlex.style.display = 'flex';
+                cardFlex.style.width = '100%';
+                cardFlex.style.alignItems = 'stretch';
+
+                // Column 1 (Left): Voting controls
+                const voteCol = document.createElement('div');
+                voteCol.style.display = 'flex';
+                voteCol.style.flexDirection = 'column';
+                voteCol.style.alignItems = 'center';
+                voteCol.style.justifyContent = 'flex-start';
+                voteCol.style.marginRight = '16px';
+                voteCol.style.minWidth = '32px';
+                voteCol.style.userSelect = 'none';
+
+                const userVotes = getUserVotes();
+                const activeVote = userVotes[thought.id] || null;
+
+                // Upvote button
+                const upBtn = document.createElement('div');
+                upBtn.style.cursor = 'pointer';
+                upBtn.style.display = 'flex';
+                upBtn.style.alignItems = 'center';
+                upBtn.style.justifyContent = 'center';
+                upBtn.style.width = '26px';
+                upBtn.style.height = '26px';
+                upBtn.style.borderRadius = '6px';
+                upBtn.style.transition = 'all 0.15s ease';
+                upBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>`;
+
+                // Downvote button
+                const downBtn = document.createElement('div');
+                downBtn.style.cursor = 'pointer';
+                downBtn.style.display = 'flex';
+                downBtn.style.alignItems = 'center';
+                downBtn.style.justifyContent = 'center';
+                downBtn.style.width = '26px';
+                downBtn.style.height = '26px';
+                downBtn.style.borderRadius = '6px';
+                downBtn.style.transition = 'all 0.15s ease';
+                downBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+
+                // Score text
+                const scoreText = document.createElement('span');
+                scoreText.style.fontWeight = 'bold';
+                scoreText.style.fontSize = '0.95em';
+                scoreText.style.margin = '3px 0';
+                scoreText.style.fontFamily = 'sans-serif';
+                scoreText.textContent = thought.votes || 0;
+
+                // Color vote components based on active vote
+                if (activeVote === 'up') {
+                    upBtn.style.color = '#4f46e5';
+                    upBtn.style.backgroundColor = '#eeebff';
+                    scoreText.style.color = '#4f46e5';
+                } else {
+                    upBtn.style.color = '#94a3b8';
+                    upBtn.style.backgroundColor = 'transparent';
+                }
+
+                if (activeVote === 'down') {
+                    downBtn.style.color = '#e11d48';
+                    downBtn.style.backgroundColor = '#ffe4e6';
+                    scoreText.style.color = '#e11d48';
+                } else {
+                    downBtn.style.color = '#94a3b8';
+                    downBtn.style.backgroundColor = 'transparent';
+                }
+
+                if (activeVote !== 'up' && activeVote !== 'down') {
+                    scoreText.style.color = '#475569';
+                }
+
+                // Setup hover and click functionality
+                upBtn.onmouseover = () => {
+                    if (activeVote !== 'up') {
+                        upBtn.style.color = '#4f46e5';
+                        upBtn.style.backgroundColor = '#eeebff';
+                    }
+                };
+                upBtn.onmouseout = () => {
+                    if (activeVote !== 'up') {
+                        upBtn.style.color = '#94a3b8';
+                        upBtn.style.backgroundColor = 'transparent';
+                    }
+                };
+                upBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    vote(thought.id, 'up');
+                };
+
+                downBtn.onmouseover = () => {
+                    if (activeVote !== 'down') {
+                        downBtn.style.color = '#e11d48';
+                        downBtn.style.backgroundColor = '#ffe4e6';
+                    }
+                };
+                downBtn.onmouseout = () => {
+                    if (activeVote !== 'down') {
+                        downBtn.style.color = '#94a3b8';
+                        downBtn.style.backgroundColor = 'transparent';
+                    }
+                };
+                downBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    vote(thought.id, 'down');
+                };
+
+                voteCol.appendChild(upBtn);
+                voteCol.appendChild(scoreText);
+                voteCol.appendChild(downBtn);
+
+                // Column 2 (Right): Content panel
+                const contentCol = document.createElement('div');
+                contentCol.style.flex = '1';
+                contentCol.style.minWidth = '0';
+                contentCol.style.display = 'flex';
+                contentCol.style.flexDirection = 'column';
+
                 // Paragraph for text with inline timestamp
                 const p = document.createElement('p');
                 p.style.whiteSpace = 'pre-wrap';
@@ -629,7 +784,7 @@
                 // Add the text content
                 p.textContent = thought.text + ' ';
 
-                // Append the time inline inside a small span (Original style)
+                // Append the time inline inside a small span
                 const timeSpan = document.createElement('span');
                 timeSpan.style.fontSize = '0.8em';
                 timeSpan.style.color = '#777';
@@ -637,9 +792,9 @@
                 timeSpan.textContent = `(${thought.time})`;
                 p.appendChild(timeSpan);
 
-                // Clicking text triggers edit mode
-                p.onclick = () => startEdit(thought.id, thought.text, itemDiv, p);
-                itemDiv.appendChild(p);
+                // Clicking text triggers edit mode (passing contentCol)
+                p.onclick = () => startEdit(thought.id, thought.text, itemDiv, contentCol, p);
+                contentCol.appendChild(p);
 
                 // Inputs / Outputs Connections
                 if (thought.inputs.length > 0 || thought.outputs.length > 0) {
@@ -780,7 +935,7 @@
                         connSec.appendChild(row);
                     }
 
-                    itemDiv.appendChild(connSec);
+                    contentCol.appendChild(connSec);
                 }
 
                 // Actions toolbar
@@ -789,48 +944,33 @@
                 actionsDiv.style.gap = '8px';
                 actionsDiv.style.marginTop = '10px';
 
-                if (linkingSourceId) {
-                    if (thought.id !== linkingSourceId) {
-                        const linkHereBtn = document.createElement('button');
-                        linkHereBtn.textContent = 'Link Here';
-                        linkHereBtn.onclick = () => selectLinkTarget(thought.id);
-                        actionsDiv.appendChild(linkHereBtn);
-                    } else {
-                        const marker = document.createElement('span');
-                        marker.style.fontSize = '0.8em';
-                        marker.style.color = '#b45309';
-                        marker.style.fontFamily = 'serif';
-                        marker.textContent = 'Linking Source';
-                        actionsDiv.appendChild(marker);
-                    }
-                } else {
-                    const referToBtn = document.createElement('button');
-                    referToBtn.textContent = 'Refer To';
-                    referToBtn.onclick = () => openModal(thought.id, thought.text, 'spawn');
-                    actionsDiv.appendChild(referToBtn);
+                const referToBtn = document.createElement('button');
+                referToBtn.textContent = 'Refer To';
+                referToBtn.onclick = () => openModal(thought.id, thought.text, 'spawn');
+                actionsDiv.appendChild(referToBtn);
 
-                    const referFromBtn = document.createElement('button');
-                    referFromBtn.textContent = 'Refer From';
-                    referFromBtn.onclick = () => openModal(thought.id, thought.text, 'refer');
-                    actionsDiv.appendChild(referFromBtn);
+                const referFromBtn = document.createElement('button');
+                referFromBtn.textContent = 'Refer From';
+                referFromBtn.onclick = () => openModal(thought.id, thought.text, 'refer');
+                actionsDiv.appendChild(referFromBtn);
 
-                    const linkBtn = document.createElement('button');
-                    linkBtn.textContent = 'Link';
-                    linkBtn.onclick = () => startLinkingMode(thought.id);
-                    actionsDiv.appendChild(linkBtn);
+                const copyBtn = document.createElement('button');
+                copyBtn.textContent = 'Copy URL';
+                copyBtn.onclick = () => copyThoughtUrl(thought.id);
+                actionsDiv.appendChild(copyBtn);
 
-                    const copyBtn = document.createElement('button');
-                    copyBtn.textContent = 'Copy URL';
-                    copyBtn.onclick = () => copyThoughtUrl(thought.id);
-                    actionsDiv.appendChild(copyBtn);
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.onclick = () => deleteThought(thought.id);
+                actionsDiv.appendChild(deleteBtn);
 
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.textContent = 'Delete';
-                    deleteBtn.onclick = () => deleteThought(thought.id);
-                    actionsDiv.appendChild(deleteBtn);
-                }
+                contentCol.appendChild(actionsDiv);
 
-                itemDiv.appendChild(actionsDiv);
+                // Assemble Columns
+                cardFlex.appendChild(voteCol);
+                cardFlex.appendChild(contentCol);
+                itemDiv.appendChild(cardFlex);
+                
                 container.appendChild(itemDiv);
             });
         }
@@ -1028,7 +1168,7 @@
         }
 
         // Edit inline function
-        function startEdit(id, originalText, itemDiv, p) {
+        function startEdit(id, originalText, itemDiv, contentCol, p) {
             // Set focused thought so that the network graph renders it and neighbors
             setFocus(id);
             renderGraph();
@@ -1094,7 +1234,7 @@
             controls.appendChild(cancelBtn);
             editWrapper.appendChild(controls);
 
-            itemDiv.replaceChild(editWrapper, p);
+            contentCol.replaceChild(editWrapper, p);
             editArea.focus();
             editArea.setSelectionRange(originalText.length, originalText.length);
         }
@@ -1118,69 +1258,6 @@
                 alert("Error: " + e.message);
             }
         }
-
-        // Link features
-        function startLinkingMode(sourceId) {
-            linkingSourceId = sourceId;
-            linkingBannerEl.style.display = 'flex';
-            render();
-        }
-
-        function cancelLinkingMode() {
-            linkingSourceId = null;
-            linkingBannerEl.style.display = 'none';
-            render();
-        }
-
-        cancelLinkingBtn.onclick = cancelLinkingMode;
-
-        function selectLinkTarget(targetId) {
-            linkingTargetId = targetId;
-            const sObj = thoughts.find(t => t.id === linkingSourceId);
-            const tObj = thoughts.find(t => t.id === targetId);
-
-            if (sObj && tObj) {
-                linkSourcePreview.textContent = truncateText(sObj.text, 35);
-                linkTargetPreview.textContent = truncateText(tObj.text, 35);
-                linkLabelInput.value = '';
-                linkLabelModal.style.display = 'flex';
-            }
-        }
-
-        linkLabelCancel.onclick = () => {
-            linkLabelModal.style.display = 'none';
-            linkingTargetId = null;
-        };
-
-        linkLabelSubmit.onclick = async () => {
-            const labelVal = linkLabelInput.value.trim();
-            try {
-                const response = await fetch('/api/link', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        sourceId: linkingSourceId,
-                        targetId: linkingTargetId,
-                        label: labelVal
-                    })
-                });
-                
-                if (!response.ok) {
-                    const data = await response.json();
-                    throw new Error(data.error || 'Failed to create connection');
-                }
-
-                linkLabelModal.style.display = 'none';
-                linkingSourceId = null;
-                linkingTargetId = null;
-                linkingBannerEl.style.display = 'none';
-                
-                showToast("Connection created!");
-                await loadThoughts();
-            } catch (e) {
-                alert("Error: " + e.message);
-            }
-        };
 
         // Spawn/Refer modal features
         let activeModalMode = 'spawn';

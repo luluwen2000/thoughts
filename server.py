@@ -29,6 +29,9 @@ def load_data():
         if 'outputs' not in item:
             item['outputs'] = []
             modified = True
+        if 'votes' not in item:
+            item['votes'] = 0
+            modified = True
 
     if modified:
         save_data(data)
@@ -59,7 +62,8 @@ def get_thoughts():
             'time': item['time'],
             'text': item['text'],
             'inputs': item['inputs'],
-            'outputs': item['outputs']
+            'outputs': item['outputs'],
+            'votes': item.get('votes', 0)
         })
     indexed_data.reverse()
     return jsonify(indexed_data)
@@ -80,7 +84,8 @@ def add_thought():
         'time': time_str,
         'text': text,
         'inputs': [],
-        'outputs': []
+        'outputs': [],
+        'votes': 0
     }
     data.append(new_thought)
     save_data(data)
@@ -146,6 +151,28 @@ def delete_thought():
         
     return jsonify({'error': 'Invalid index or ID'}), 400
 
+@app.route('/api/vote', methods=['POST'])
+def vote_thought():
+    thought_id = request.json.get('id') if request.json else None
+    delta = request.json.get('delta') if request.json else None
+    
+    if not thought_id or delta is None:
+        return jsonify({'error': 'Missing id or delta'}), 400
+        
+    try:
+        delta = int(delta)
+    except ValueError:
+        return jsonify({'error': 'Invalid delta'}), 400
+        
+    data = load_data()
+    for item in data:
+        if item['id'] == thought_id:
+            item['votes'] = item.get('votes', 0) + delta
+            save_data(data)
+            return jsonify({'status': 'success', 'votes': item['votes']})
+            
+    return jsonify({'error': 'Thought not found'}), 404
+
 @app.route('/api/spawn', methods=['POST'])
 def spawn_thought():
     parent_id = request.json.get('parentId') if request.json else None
@@ -178,7 +205,8 @@ def spawn_thought():
         'time': time_str,
         'text': text,
         'inputs': [{'id': conn_id, 'nodeId': parent_id, 'label': label}],
-        'outputs': []
+        'outputs': [],
+        'votes': 0
     }
     
     parent['outputs'].append({'id': conn_id, 'nodeId': child_id, 'label': label})
@@ -219,7 +247,8 @@ def refer_thought():
         'time': time_str,
         'text': text,
         'inputs': [],
-        'outputs': [{'id': conn_id, 'nodeId': target_id, 'label': label}]
+        'outputs': [{'id': conn_id, 'nodeId': target_id, 'label': label}],
+        'votes': 0
     }
     
     target['inputs'].append({'id': conn_id, 'nodeId': source_id, 'label': label})
@@ -367,7 +396,8 @@ def add_and_link_multiple():
         'time': time_str,
         'text': text,
         'inputs': [],
-        'outputs': []
+        'outputs': [],
+        'votes': 0
     }
     
     data = load_data()
