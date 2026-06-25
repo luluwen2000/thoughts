@@ -66,20 +66,70 @@
 
     <!-- Spawn / Refer Dialog Modal -->
     <div id="spawn-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); display: none; align-items: center; justify-content: center; z-index: 1000; font-family: serif;">
-        <div style="background: #ffffff; border: 1px solid #cccccc; border-radius: 8px; padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-            <div id="modal-title" style="font-weight: bold; margin-bottom: 10px; font-size: 1.1em;">Spawn Connected Thought</div>
-            <div style="font-size: 0.85em; color: #666; margin-bottom: 12px; font-style: italic;"><span id="modal-preview-label">Parent</span>: <span id="parent-preview"></span></div>
-            <div style="margin-bottom: 12px;">
-                <label id="modal-text-label" style="display: block; font-size: 0.85em; margin-bottom: 4px; font-weight: bold;">New Thought Content</label>
-                <textarea id="spawn-text" placeholder="Write next thought..." rows="3" style="width: 100%; font-family: serif; box-sizing: border-box; border: 1px solid #cccccc; border-radius: 4px; padding: 6px;"></textarea>
+        <div style="background: #ffffff; border: 1px solid #cccccc; border-radius: 12px; padding: 24px; width: 90%; max-width: 440px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);">
+            <div id="modal-title" style="font-weight: bold; margin-bottom: 4px; font-size: 1.2em; color: #1e293b;">Spawn Connected Thought</div>
+            <div style="font-size: 0.85em; color: #64748b; margin-bottom: 16px; font-style: italic;"><span id="modal-preview-label">Parent</span>: <span id="parent-preview"></span></div>
+            
+            <!-- Option A: Create New Note -->
+            <div id="spawn-content-new" style="margin-bottom: 20px;">
+                <label id="modal-text-label" style="display: block; font-size: 0.85em; margin-bottom: 6px; font-weight: bold; color: #334155;">New Thought Content</label>
+                <textarea id="spawn-text" placeholder="Write next thought..." rows="3" style="width: 100%; font-family: serif; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; font-size: 0.95em; transition: border-color 0.2s;"></textarea>
             </div>
-            <div style="margin-bottom: 12px;">
-                <label style="display: block; font-size: 0.85em; margin-bottom: 4px; font-weight: bold;">Connection Label (Optional)</label>
-                <input type="text" id="spawn-label" placeholder="e.g. builds on, criticism" style="width: 100%; box-sizing: border-box; padding: 6px; border: 1px solid #cccccc; border-radius: 4px; font-family: serif;">
+
+            <!-- Option B: Link Existing Note -->
+            <div id="spawn-content-existing" style="margin-bottom: 12px; position: relative;">
+                <label style="display: block; font-size: 0.85em; margin-bottom: 6px; font-weight: bold; color: #334155;">Link Existing Note</label>
+                <input type="text" id="spawn-existing-search" placeholder="Type to search thoughts..." autocomplete="off" style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: serif; font-size: 0.95em;">
+                <!-- Autocomplete suggestions -->
+                <div id="spawn-existing-suggestions" style="
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    right: 0;
+                    background: #ffffff;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 6px;
+                    max-height: 150px;
+                    overflow-y: auto;
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                    display: none;
+                    z-index: 1010;
+                "></div>
             </div>
+
+            <!-- Selected Target Display -->
+            <div id="spawn-selected-target-display" style="
+                display: none;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 6px;
+                padding: 8px 10px;
+                margin-bottom: 12px;
+                font-size: 0.9em;
+                align-items: center;
+                justify-content: space-between;
+            ">
+                <div style="color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;">
+                    <span style="font-weight: 600; color: #475569;">Selected Note:</span> <span id="spawn-selected-target-text" style="font-family: serif;"></span>
+                </div>
+                <button id="spawn-clear-target-selection" style="background: none; border: none; color: #ef4444; font-size: 1.1em; cursor: pointer; font-weight: bold;">×</button>
+            </div>
+
+            <!-- Link Direction Preview -->
+            <div id="spawn-direction-preview-box" style="display: none; margin-bottom: 12px; font-size: 0.85em; color: #475569; background: #f8fafc; padding: 8px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <span style="font-weight: bold;">Direction: </span> <span id="spawn-direction-preview">This ➔ Target</span>
+            </div>
+
+            <!-- Common Connection Label field -->
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 0.85em; margin-bottom: 6px; font-weight: bold; color: #334155;">Connection Label (Optional)</label>
+                <input type="text" id="spawn-label" placeholder="e.g. relates to, criticism" style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: serif; font-size: 0.95em;">
+            </div>
+
+            <!-- Footer Actions -->
             <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px;">
-                <button id="spawn-cancel-btn">Cancel</button>
-                <button id="spawn-submit-btn">Submit</button>
+                <button id="spawn-cancel-btn" style="background: #f1f5f9; color: #475569; border: none; border-radius: 6px; padding: 8px 16px; font-family: serif; cursor: pointer;">Cancel</button>
+                <button id="spawn-submit-btn" style="background: #4f46e5; color: #ffffff; border: none; border-radius: 6px; padding: 8px 20px; font-family: serif; font-weight: 500; cursor: pointer;">Submit</button>
             </div>
         </div>
     </div>
@@ -371,6 +421,14 @@
         const spawnLabel = document.getElementById('spawn-label');
         const spawnCancelBtn = document.getElementById('spawn-cancel-btn');
         const spawnSubmitBtn = document.getElementById('spawn-submit-btn');
+
+        const spawnExistingSearch = document.getElementById('spawn-existing-search');
+        const spawnExistingSuggestions = document.getElementById('spawn-existing-suggestions');
+        const spawnSelectedTargetDisplay = document.getElementById('spawn-selected-target-display');
+        const spawnSelectedTargetText = document.getElementById('spawn-selected-target-text');
+        const spawnClearTargetSelection = document.getElementById('spawn-clear-target-selection');
+        const spawnDirectionPreview = document.getElementById('spawn-direction-preview');
+        const spawnDirectionPreviewBox = document.getElementById('spawn-direction-preview-box');
 
         const linkLabelModal = document.getElementById('link-label-modal');
         const linkSourcePreview = document.getElementById('link-source-preview');
@@ -1127,33 +1185,83 @@
         // Spawn/Refer modal features
         let activeModalMode = 'spawn';
         let modalActiveId = null;
+        let modalExistingTargetId = null;
+
+        function validateSpawnModalInputs() {
+            const textVal = spawnText.value.trim();
+            const hasNewText = textVal.length > 0;
+            const hasExistingSelected = modalExistingTargetId !== null;
+
+            if (hasNewText) {
+                // If new text is entered, disable existing search input
+                spawnExistingSearch.disabled = true;
+                spawnExistingSearch.placeholder = "(Clear new note text to select existing note)";
+                
+                spawnSubmitBtn.textContent = (activeModalMode === 'spawn') ? 'Spawn' : 'Create';
+                spawnSubmitBtn.style.opacity = '1';
+                spawnSubmitBtn.style.pointerEvents = 'auto';
+            } else if (hasExistingSelected) {
+                // If existing target is selected, disable new thought textarea
+                spawnText.disabled = true;
+                spawnText.placeholder = "(Clear selected existing note to write new note)";
+                
+                spawnSubmitBtn.textContent = 'Connect';
+                spawnSubmitBtn.style.opacity = '1';
+                spawnSubmitBtn.style.pointerEvents = 'auto';
+            } else {
+                // Both are empty/unselected: enable both, default placeholders
+                spawnExistingSearch.disabled = false;
+                spawnExistingSearch.placeholder = "Type to search thoughts...";
+                spawnText.disabled = false;
+                if (activeModalMode === 'spawn') {
+                    spawnText.placeholder = "Write next thought...";
+                } else {
+                    spawnText.placeholder = "Write referring thought...";
+                }
+
+                spawnSubmitBtn.textContent = (activeModalMode === 'spawn') ? 'Spawn' : 'Create';
+                spawnSubmitBtn.style.opacity = '0.5';
+                spawnSubmitBtn.style.pointerEvents = 'none';
+            }
+        }
+
+        spawnText.oninput = validateSpawnModalInputs;
 
         function openModal(id, text, mode) {
             modalActiveId = id;
             activeModalMode = mode;
+            modalExistingTargetId = null;
 
             const titleEl = document.getElementById('modal-title');
             const previewLabelEl = document.getElementById('modal-preview-label');
             const textLabelEl = document.getElementById('modal-text-label');
-            const submitBtn = document.getElementById('spawn-submit-btn');
 
             if (mode === 'spawn') {
                 titleEl.textContent = 'Spawn Connected Thought';
                 previewLabelEl.textContent = 'Parent';
                 textLabelEl.textContent = 'New Thought Content';
-                submitBtn.textContent = 'Spawn';
-                spawnText.placeholder = 'Write next thought...';
+                spawnDirectionPreview.textContent = 'This thought ➔ [Target Note]';
             } else {
                 titleEl.textContent = 'Create Thought Referring to';
                 previewLabelEl.textContent = 'Target';
                 textLabelEl.textContent = 'New Referring Thought Content';
-                submitBtn.textContent = 'Create';
-                spawnText.placeholder = 'Write referring thought...';
+                spawnDirectionPreview.textContent = '[Target Note] ➔ This thought';
             }
 
             parentPreview.textContent = truncateText(text, 40);
             spawnText.value = '';
             spawnLabel.value = '';
+            
+            // Reset existing note selection
+            spawnExistingSearch.value = '';
+            spawnExistingSuggestions.style.display = 'none';
+            spawnExistingSuggestions.innerHTML = '';
+            spawnSelectedTargetDisplay.style.display = 'none';
+            spawnSelectedTargetText.textContent = '';
+            spawnDirectionPreviewBox.style.display = 'none';
+
+            validateSpawnModalInputs();
+
             spawnModal.style.display = 'flex';
             spawnText.focus();
         }
@@ -1161,34 +1269,159 @@
         spawnCancelBtn.onclick = () => {
             spawnModal.style.display = 'none';
             modalActiveId = null;
+            modalExistingTargetId = null;
         };
 
+        // Existing note search input logic for the modal
+        spawnExistingSearch.oninput = () => {
+            const query = spawnExistingSearch.value.trim().toLowerCase();
+            if (!query) {
+                spawnExistingSuggestions.style.display = 'none';
+                spawnExistingSuggestions.innerHTML = '';
+                return;
+            }
+            
+            // Filter thoughts (exclude the modalActiveId itself to avoid self-linking)
+            const matches = thoughts.filter(t => 
+                t.id !== modalActiveId && 
+                t.text.toLowerCase().includes(query)
+            );
+            
+            if (matches.length === 0) {
+                spawnExistingSuggestions.innerHTML = '<div style="padding: 8px 12px; color: #64748b; font-size: 0.9em; font-style: italic;">No matches found</div>';
+                spawnExistingSuggestions.style.display = 'block';
+                return;
+            }
+            
+            spawnExistingSuggestions.innerHTML = '';
+            matches.forEach(match => {
+                const item = document.createElement('div');
+                item.style.padding = '8px 12px';
+                item.style.cursor = 'pointer';
+                item.style.fontSize = '0.9em';
+                item.style.borderBottom = '1px solid #f1f5f9';
+                item.style.transition = 'background 0.2s';
+                
+                const textPreview = truncateText(match.text, 55);
+                const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                const highlightedText = textPreview.replace(new RegExp(`(${escapedQuery})`, 'gi'), '<strong style="color: #4f46e5;">$1</strong>');
+                
+                item.innerHTML = `
+                    <div style="font-weight: 500; color: #334155; margin-bottom: 2px;">${highlightedText}</div>
+                    <div style="font-size: 0.8em; color: #94a3b8;">(${match.time})</div>
+                `;
+                
+                item.onmouseover = () => { item.style.backgroundColor = '#f1f5f9'; };
+                item.onmouseout = () => { item.style.backgroundColor = 'transparent'; };
+                
+                item.onclick = () => {
+                    modalExistingTargetId = match.id;
+                    spawnSelectedTargetText.textContent = truncateText(match.text, 40);
+                    spawnSelectedTargetDisplay.style.display = 'flex';
+                    spawnDirectionPreviewBox.style.display = 'block';
+                    spawnExistingSearch.value = '';
+                    spawnExistingSuggestions.style.display = 'none';
+                    spawnExistingSuggestions.innerHTML = '';
+                    
+                    if (activeModalMode === 'spawn') {
+                        spawnDirectionPreview.textContent = `This thought ➔ "${truncateText(match.text, 20)}"`;
+                    } else {
+                        spawnDirectionPreview.textContent = `"${truncateText(match.text, 20)}" ➔ This thought`;
+                    }
+
+                    validateSpawnModalInputs();
+                };
+                
+                spawnExistingSuggestions.appendChild(item);
+            });
+            
+            spawnExistingSuggestions.style.display = 'block';
+        };
+
+        spawnClearTargetSelection.onclick = () => {
+            modalExistingTargetId = null;
+            spawnSelectedTargetDisplay.style.display = 'none';
+            spawnSelectedTargetText.textContent = '';
+            spawnDirectionPreviewBox.style.display = 'none';
+            
+            if (activeModalMode === 'spawn') {
+                spawnDirectionPreview.textContent = 'This thought ➔ [Target Note]';
+            } else {
+                spawnDirectionPreview.textContent = '[Target Note] ➔ This thought';
+            }
+
+            validateSpawnModalInputs();
+        };
+
+        // Close modal suggestions dropdown on click outside
+        document.addEventListener('click', (e) => {
+            if (e.target !== spawnExistingSearch && !spawnExistingSuggestions.contains(e.target)) {
+                spawnExistingSuggestions.style.display = 'none';
+            }
+        });
+
+        // Submit action: handles both new note creations and existing note linkings
         spawnSubmitBtn.onclick = async () => {
-            const textVal = spawnText.value.trim();
             const labelVal = spawnLabel.value.trim();
 
-            if (!textVal) return;
+            if (modalExistingTargetId === null) {
+                // Create New Note
+                const textVal = spawnText.value.trim();
+                if (!textVal) return;
 
-            const endpoint = (activeModalMode === 'spawn') ? '/api/spawn' : '/api/refer';
-            const payload = (activeModalMode === 'spawn') 
-                ? { parentId: modalActiveId, text: textVal, label: labelVal }
-                : { targetId: modalActiveId, text: textVal, label: labelVal };
+                const endpoint = (activeModalMode === 'spawn') ? '/api/spawn' : '/api/refer';
+                const payload = (activeModalMode === 'spawn') 
+                    ? { parentId: modalActiveId, text: textVal, label: labelVal }
+                    : { targetId: modalActiveId, text: textVal, label: labelVal };
 
-            try {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
 
-                if (!response.ok) throw new Error('Failed to save thought');
+                    if (!response.ok) throw new Error('Failed to save thought');
 
-                spawnModal.style.display = 'none';
-                modalActiveId = null;
-                showToast(activeModalMode === 'spawn' ? "Thought spawned!" : "Reference thought created!");
-                await loadThoughts();
-            } catch (e) {
-                alert("Error: " + e.message);
+                    spawnModal.style.display = 'none';
+                    modalActiveId = null;
+                    showToast(activeModalMode === 'spawn' ? "Thought spawned!" : "Reference thought created!");
+                    await loadThoughts();
+                } catch (e) {
+                    alert("Error: " + e.message);
+                }
+            } else {
+                // Link Existing Note
+                // Determine direction
+                // If mode === 'spawn', we connect: modalActiveId (this card) -> modalExistingTargetId (selected card)
+                // If mode === 'refer', we connect: modalExistingTargetId (selected card) -> modalActiveId (this card)
+                const sourceId = (activeModalMode === 'spawn') ? modalActiveId : modalExistingTargetId;
+                const targetId = (activeModalMode === 'spawn') ? modalExistingTargetId : modalActiveId;
+
+                try {
+                    const response = await fetch('/api/link', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            sourceId: sourceId,
+                            targetId: targetId,
+                            label: labelVal
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const data = await response.json();
+                        throw new Error(data.error || 'Failed to link thoughts');
+                    }
+
+                    spawnModal.style.display = 'none';
+                    modalActiveId = null;
+                    modalExistingTargetId = null;
+                    showToast("Connection to existing thought created!");
+                    await loadThoughts();
+                } catch (e) {
+                    alert("Error: " + e.message);
+                }
             }
         };
 
@@ -1267,6 +1500,8 @@
         styleButtonHover(document.getElementById('bulk-new-submit-btn'), '#4f46e5', '#4338ca', '#ffffff', '#ffffff');
         styleButtonHover(document.getElementById('bulk-existing-cancel-btn'), '#f1f5f9', '#e2e8f0', '#475569', '#334155');
         styleButtonHover(bulkExistingSubmitBtn, '#4f46e5', '#4338ca', '#ffffff', '#ffffff');
+        styleButtonHover(spawnCancelBtn, '#f1f5f9', '#e2e8f0', '#475569', '#334155');
+        styleButtonHover(spawnSubmitBtn, '#4f46e5', '#4338ca', '#ffffff', '#ffffff');
 
         // Bulk clear handler
         bulkClearBtn.onclick = () => {
