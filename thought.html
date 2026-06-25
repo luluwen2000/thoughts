@@ -540,7 +540,7 @@
         }
 
         // Load thoughts from the Python backend API
-        async function loadThoughts() {
+        async function loadThoughts(shouldScroll = false) {
             try {
                 const response = await fetch('/api/thoughts');
                 if (!response.ok) throw new Error('Failed to fetch thoughts');
@@ -551,8 +551,8 @@
                 
                 render();
                 renderGraph();
-
-                if (focusedThoughtId) {
+        
+                if (shouldScroll && focusedThoughtId) {
                     setTimeout(() => {
                         const targetCard = document.getElementById(`thought-${focusedThoughtId}`);
                         if (targetCard) {
@@ -1107,7 +1107,7 @@
 
         function focusOnThought(id) {
             setFocus(id);
-            loadThoughts();
+            loadThoughts(true);
         }
 
         resetGraphBtn.onclick = () => {
@@ -1769,11 +1769,11 @@
         // Hash navigation
         window.addEventListener('hashchange', () => {
             focusedThoughtId = getFocusedThoughtId();
-            loadThoughts();
+            loadThoughts(true);
         });
 
         // Load init
-        loadThoughts();
+        loadThoughts(true);
     </script>
 </body>
 </html>
