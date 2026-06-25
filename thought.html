@@ -100,7 +100,7 @@
                             transition: background-color 0.2s;
                         ">
                             Sort by Votes
-                            <span class="active-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #4f46e5; display: inline-block;"></span>
+                            <span class="active-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #4f46e5; display: none;"></span>
                         </div>
                         <div id="sort-by-time" style="
                             padding: 8px 12px;
@@ -114,7 +114,7 @@
                             transition: background-color 0.2s;
                         ">
                             Sort by Time
-                            <span class="active-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #4f46e5; display: none;"></span>
+                            <span class="active-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #4f46e5; display: inline-block;"></span>
                         </div>
                         <div id="sort-by-refs" style="
                             padding: 8px 12px;
@@ -572,7 +572,7 @@
         let selectedThoughtIds = new Set();
         let selectedExistingTargetId = null;
         let previousFocusedThoughtId = null;
-        let currentSortOrder = 'votes';
+        let currentSortOrder = 'time';
         let currentSearchQuery = null;
 
         // Search helper functions
