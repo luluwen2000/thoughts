@@ -581,20 +581,48 @@
             return word.replace(/^[^a-zA-Z0-9#_]+|[^a-zA-Z0-9_]+$/g, '').toLowerCase();
         }
 
+        function getSearchQueryFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return cleanWord(params.get('q'));
+        }
+
+        function updateSearchUrl(query) {
+            const url = new URL(window.location.href);
+            if (query) {
+                url.searchParams.set('q', query);
+            } else {
+                url.searchParams.delete('q');
+            }
+            history.pushState(null, '', url.toString());
+        }
+
         function searchWord(word) {
             const cleaned = cleanWord(word);
             if (!cleaned) return;
+            if (currentSearchQuery === cleaned) return;
             currentSearchQuery = cleaned;
+            updateSearchUrl(cleaned);
             render();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function clearSearch() {
+            if (currentSearchQuery === null) return;
             currentSearchQuery = null;
+            updateSearchUrl(null);
             render();
         }
 
         clearSearchBtn.onclick = clearSearch;
+
+        // Initialize state on popstate (back/forward navigation)
+        window.addEventListener('popstate', () => {
+            const newQuery = getSearchQueryFromUrl();
+            if (newQuery !== currentSearchQuery) {
+                currentSearchQuery = newQuery;
+                render();
+            }
+        });
 
         function sortThoughts() {
             if (currentSortOrder === 'votes') {
@@ -679,6 +707,7 @@
                 sortThoughts();
                 
                 focusedThoughtId = getFocusedThoughtId();
+                currentSearchQuery = getSearchQueryFromUrl();
                 
                 render();
                 renderGraph();
