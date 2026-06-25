@@ -291,6 +291,110 @@ def unlink_thoughts():
     save_data(data)
     return jsonify({'status': 'success'})
 
+@app.route('/api/link_multiple', methods=['POST'])
+def link_multiple():
+    source_ids = request.json.get('sourceIds', [])
+    target_id = request.json.get('targetId')
+    label = request.json.get('label', '').strip() if request.json else ''
+    
+    if not source_ids or not target_id:
+        return jsonify({'error': 'Missing sourceIds or targetId'}), 400
+        
+    data = load_data()
+    
+    # Find target
+    target = None
+    for item in data:
+        if item['id'] == target_id:
+            target = item
+            break
+            
+    if not target:
+        return jsonify({'error': 'Target thought not found'}), 404
+        
+    # Find sources and perform linking
+    linked_count = 0
+    for source_id in source_ids:
+        if source_id == target_id:
+            continue
+        
+        # Find source
+        source = None
+        for item in data:
+            if item['id'] == source_id:
+                source = item
+                break
+                
+        if not source:
+            continue
+            
+        # Check if link already exists
+        exists = False
+        for conn in source['outputs']:
+            if conn['nodeId'] == target_id:
+                exists = True
+                break
+                
+        if exists:
+            continue
+            
+        conn_id = str(uuid.uuid4())
+        source['outputs'].append({'id': conn_id, 'nodeId': target_id, 'label': label})
+        target['inputs'].append({'id': conn_id, 'nodeId': source_id, 'label': label})
+        linked_count += 1
+        
+    if linked_count > 0:
+        save_data(data)
+        
+    return jsonify({'status': 'success', 'linked_count': linked_count})
+
+@app.route('/api/add_and_link_multiple', methods=['POST'])
+def add_and_link_multiple():
+    source_ids = request.json.get('sourceIds', [])
+    text = request.json.get('text', '').strip() if request.json else ''
+    label = request.json.get('label', '').strip() if request.json else ''
+    
+    if not text:
+        return jsonify({'error': 'Empty thought text'}), 400
+        
+    # Create new thought (target)
+    target_id = str(uuid.uuid4())
+    now = datetime.datetime.now()
+    time_str = now.strftime('%m/%d/%Y, %I:%M:%S %p').lstrip('0').replace('/0', '/')
+    
+    new_thought = {
+        'id': target_id,
+        'time': time_str,
+        'text': text,
+        'inputs': [],
+        'outputs': []
+    }
+    
+    data = load_data()
+    
+    # Perform linking from sources to this new thought
+    linked_count = 0
+    for source_id in source_ids:
+        # Find source
+        source = None
+        for item in data:
+            if item['id'] == source_id:
+                source = item
+                break
+                
+        if not source:
+            continue
+            
+        conn_id = str(uuid.uuid4())
+        source['outputs'].append({'id': conn_id, 'nodeId': target_id, 'label': label})
+        new_thought['inputs'].append({'id': conn_id, 'nodeId': source_id, 'label': label})
+        linked_count += 1
+        
+    data.append(new_thought)
+    save_data(data)
+    
+    return jsonify({'status': 'success', 'thought': new_thought, 'linked_count': linked_count})
+
 if __name__ == '__main__':
     # Start Flask server on port 8000
     app.run(port=8000)

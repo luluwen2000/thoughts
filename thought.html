@@ -100,6 +100,262 @@
         </div>
     </div>
 
+    <!-- Bulk Actions Floating Bar -->
+    <div id="bulk-actions-bar" style="
+        position: fixed;
+        bottom: -100px; /* Hidden initially */
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px) saturate(180%);
+        -webkit-backdrop-filter: blur(12px) saturate(180%);
+        border: 1px solid rgba(229, 231, 235, 0.7);
+        border-radius: 9999px;
+        padding: 12px 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        z-index: 1001;
+        font-family: serif;
+        transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+    ">
+        <div style="font-size: 0.95em; color: #1e1b4b; font-weight: 600; display: flex; align-items: center;">
+            <span id="selected-count" style="background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 9999px; font-size: 0.85em; margin-right: 6px; font-family: serif;">0</span>
+            selected
+        </div>
+        <div style="width: 1px; height: 20px; background: #e5e7eb;"></div>
+        <button id="bulk-refer-new-btn" style="
+            background: #4f46e5;
+            color: #ffffff;
+            border: none;
+            border-radius: 9999px;
+            padding: 6px 16px;
+            font-size: 0.9em;
+            font-family: serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        ">Refer to New Note</button>
+        <button id="bulk-refer-existing-btn" style="
+            background: #ffffff;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            border-radius: 9999px;
+            padding: 6px 16px;
+            font-size: 0.9em;
+            font-family: serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        ">Refer to Existing Note</button>
+        <button id="bulk-clear-btn" style="
+            background: transparent;
+            color: #64748b;
+            border: none;
+            padding: 6px 12px;
+            font-size: 0.9em;
+            font-family: serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        ">Clear</button>
+    </div>
+
+    <!-- Bulk Refer to New Note Modal -->
+    <div id="bulk-new-modal" style="
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.3);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1002;
+        font-family: serif;
+    ">
+        <div style="
+            background: #ffffff;
+            border: 1px solid #cccccc;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+        ">
+            <div style="font-weight: bold; margin-bottom: 12px; font-size: 1.2em; color: #1e293b;">Refer Selected to New Note</div>
+            <div style="font-size: 0.85em; color: #64748b; margin-bottom: 16px; font-style: italic;">
+                Linking <span id="bulk-new-count" style="font-weight: bold; color: #4f46e5;">0</span> selected entries to a new concept/note.
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 0.85em; margin-bottom: 6px; font-weight: bold; color: #334155;">New Concept / Note Content</label>
+                <textarea id="bulk-new-text" placeholder="Describe the new concept or tag..." rows="3" style="
+                    width: 100%;
+                    font-family: serif;
+                    box-sizing: border-box;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 6px;
+                    padding: 10px;
+                    font-size: 0.95em;
+                    transition: border-color 0.2s;
+                "></textarea>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.85em; margin-bottom: 6px; font-weight: bold; color: #334155;">Connection Label (Optional)</label>
+                <input type="text" id="bulk-new-label" placeholder="e.g. relates to, categorizes" style="
+                    width: 100%;
+                    box-sizing: border-box;
+                    padding: 10px;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 6px;
+                    font-family: serif;
+                    font-size: 0.95em;
+                ">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button id="bulk-new-cancel-btn" style="
+                    background: #f1f5f9;
+                    color: #475569;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 8px 16px;
+                    font-family: serif;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                ">Cancel</button>
+                <button id="bulk-new-submit-btn" style="
+                    background: #4f46e5;
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 8px 20px;
+                    font-family: serif;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                ">Create & Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Refer to Existing Note Modal -->
+    <div id="bulk-existing-modal" style="
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.3);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1002;
+        font-family: serif;
+    ">
+        <div style="
+            background: #ffffff;
+            border: 1px solid #cccccc;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 480px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+        ">
+            <div style="font-weight: bold; margin-bottom: 12px; font-size: 1.2em; color: #1e293b;">Refer Selected to Existing Note</div>
+            <div style="font-size: 0.85em; color: #64748b; margin-bottom: 16px; font-style: italic;">
+                Linking <span id="bulk-existing-count" style="font-weight: bold; color: #4f46e5;">0</span> selected entries to an existing concept/note.
+            </div>
+            
+            <!-- Target Search Area -->
+            <div style="margin-bottom: 16px; position: relative;">
+                <label style="display: block; font-size: 0.85em; margin-bottom: 6px; font-weight: bold; color: #334155;">Search Existing Note</label>
+                <input type="text" id="bulk-existing-search" placeholder="Type to search thoughts..." autocomplete="off" style="
+                    width: 100%;
+                    box-sizing: border-box;
+                    padding: 10px;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 6px;
+                    font-family: serif;
+                    font-size: 0.95em;
+                ">
+                <!-- Autocomplete suggestions -->
+                <div id="bulk-existing-suggestions" style="
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    right: 0;
+                    background: #ffffff;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 6px;
+                    max-height: 180px;
+                    overflow-y: auto;
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                    display: none;
+                    z-index: 1010;
+                "></div>
+            </div>
+
+            <!-- Selected Target Display -->
+            <div id="selected-target-display" style="
+                display: none;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 6px;
+                padding: 10px 12px;
+                margin-bottom: 16px;
+                font-size: 0.9em;
+                align-items: center;
+                justify-content: space-between;
+            ">
+                <div style="color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;">
+                    <span style="font-weight: 600; color: #475569;">Selected Target:</span> <span id="selected-target-text" style="font-family: serif;"></span>
+                </div>
+                <button id="clear-target-selection" style="
+                    background: none;
+                    border: none;
+                    color: #ef4444;
+                    font-size: 1.1em;
+                    cursor: pointer;
+                    font-weight: bold;
+                ">×</button>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.85em; margin-bottom: 6px; font-weight: bold; color: #334155;">Connection Label (Optional)</label>
+                <input type="text" id="bulk-existing-label" placeholder="e.g. relates to, categorizes" style="
+                    width: 100%;
+                    box-sizing: border-box;
+                    padding: 10px;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 6px;
+                    font-family: serif;
+                    font-size: 0.95em;
+                ">
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button id="bulk-existing-cancel-btn" style="
+                    background: #f1f5f9;
+                    color: #475569;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 8px 16px;
+                    font-family: serif;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                ">Cancel</button>
+                <button id="bulk-existing-submit-btn" style="
+                    background: #4f46e5;
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 8px 20px;
+                    font-family: serif;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                    opacity: 0.5;
+                    pointer-events: none;
+                ">Connect</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Feedback Overlay -->
     <div id="toast-el" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #333333; color: #ffffff; padding: 8px 16px; border-radius: 4px; font-size: 0.9em; font-family: serif; transition: transform 0.3s; z-index: 2000; pointer-events: none;">Link copied to clipboard!</div>
 
@@ -126,6 +382,29 @@
         const linkingBannerEl = document.getElementById('linking-banner-el');
         const cancelLinkingBtn = document.getElementById('cancel-linking-btn');
 
+        // Bulk action elements
+        const bulkActionsBar = document.getElementById('bulk-actions-bar');
+        const selectedCountEl = document.getElementById('selected-count');
+        const bulkReferNewBtn = document.getElementById('bulk-refer-new-btn');
+        const bulkReferExistingBtn = document.getElementById('bulk-refer-existing-btn');
+        const bulkClearBtn = document.getElementById('bulk-clear-btn');
+
+        const bulkNewModal = document.getElementById('bulk-new-modal');
+        const bulkNewText = document.getElementById('bulk-new-text');
+        const bulkNewLabel = document.getElementById('bulk-new-label');
+        const bulkNewCancelBtn = document.getElementById('bulk-new-cancel-btn');
+        const bulkNewSubmitBtn = document.getElementById('bulk-new-submit-btn');
+
+        const bulkExistingModal = document.getElementById('bulk-existing-modal');
+        const bulkExistingSearch = document.getElementById('bulk-existing-search');
+        const bulkExistingSuggestions = document.getElementById('bulk-existing-suggestions');
+        const selectedTargetDisplay = document.getElementById('selected-target-display');
+        const selectedTargetText = document.getElementById('selected-target-text');
+        const clearTargetSelection = document.getElementById('clear-target-selection');
+        const bulkExistingLabel = document.getElementById('bulk-existing-label');
+        const bulkExistingCancelBtn = document.getElementById('bulk-existing-cancel-btn');
+        const bulkExistingSubmitBtn = document.getElementById('bulk-existing-submit-btn');
+
         // State variables
         let thoughts = [];
         let network = null;
@@ -133,6 +412,8 @@
         let linkingSourceId = null;
         let linkingTargetId = null;
         let spawningParentId = null;
+        let selectedThoughtIds = new Set();
+        let selectedExistingTargetId = null;
 
         // Routing helper
         function getFocusedThoughtId() {
@@ -197,23 +478,93 @@
 
                 const itemDiv = document.createElement('div');
                 itemDiv.id = `thought-${thought.id}`;
+                itemDiv.style.position = 'relative';
                 
-                // Original Card Styling
-                itemDiv.style.border = isFocused ? '1px solid #999999' : '1px solid #ececec';
+                const isSelected = selectedThoughtIds.has(thought.id);
+                
+                // Selection / Focus / Linking Card Styling hierarchy
+                let borderStyle = '1px solid #ececec';
+                let bgStyle = '#ffffff';
+                let shadowStyle = 'none';
+
+                if (isSelected) {
+                    borderStyle = '1px solid #818cf8';
+                    bgStyle = '#f5f3ff';
+                    shadowStyle = '0 4px 12px rgba(79, 70, 229, 0.08)';
+                } else if (linkingSourceId) {
+                    if (isSourceNode) {
+                        borderStyle = '1px dashed #b45309';
+                        bgStyle = '#fffbeb';
+                    } else {
+                        borderStyle = '1px solid #10b981';
+                        bgStyle = '#f0fdf4';
+                    }
+                } else if (isFocused) {
+                    borderStyle = '1px solid #999999';
+                    bgStyle = '#fafafa';
+                }
+
+                itemDiv.style.border = borderStyle;
                 itemDiv.style.borderRadius = '8px';
                 itemDiv.style.padding = '12px 16px';
-                itemDiv.style.backgroundColor = isFocused ? '#fafafa' : '#ffffff';
+                itemDiv.style.backgroundColor = bgStyle;
+                itemDiv.style.boxShadow = shadowStyle;
                 itemDiv.style.marginBottom = '15px';
-                if (linkingSourceId && !isSourceNode) {
-                    itemDiv.style.border = '1px solid #10b981';
-                    itemDiv.style.backgroundColor = '#f0fdf4';
-                }
+                itemDiv.style.transition = 'border 0.2s, background-color 0.2s, box-shadow 0.2s';
+                
+                // Add selection checkbox
+                const checkboxContainer = document.createElement('div');
+                checkboxContainer.style.position = 'absolute';
+                checkboxContainer.style.top = '12px';
+                checkboxContainer.style.right = '16px';
+                checkboxContainer.style.width = '20px';
+                checkboxContainer.style.height = '20px';
+                checkboxContainer.style.borderRadius = '50%';
+                checkboxContainer.style.border = isSelected ? '2px solid #4f46e5' : '2px solid #cccccc';
+                checkboxContainer.style.backgroundColor = isSelected ? '#4f46e5' : '#ffffff';
+                checkboxContainer.style.display = 'flex';
+                checkboxContainer.style.alignItems = 'center';
+                checkboxContainer.style.justifyContent = 'center';
+                checkboxContainer.style.cursor = 'pointer';
+                checkboxContainer.style.transition = 'all 0.2s ease';
+                checkboxContainer.style.zIndex = '5';
+                checkboxContainer.style.opacity = isSelected ? '1' : '0.15';
+                
+                itemDiv.onmouseenter = () => {
+                    if (!selectedThoughtIds.has(thought.id)) checkboxContainer.style.opacity = '1';
+                };
+                itemDiv.onmouseleave = () => {
+                    if (!selectedThoughtIds.has(thought.id)) checkboxContainer.style.opacity = '0.15';
+                };
+
+                const checkMark = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                checkMark.setAttribute("width", "12");
+                checkMark.setAttribute("height", "12");
+                checkMark.setAttribute("viewBox", "0 0 24 24");
+                checkMark.style.fill = "none";
+                checkMark.style.stroke = "#ffffff";
+                checkMark.style.strokeWidth = "3.5";
+                checkMark.style.strokeLinecap = "round";
+                checkMark.style.strokeLinejoin = "round";
+                checkMark.style.display = isSelected ? 'block' : 'none';
+
+                const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+                polyline.setAttribute("points", "20 6 9 17 4 12");
+                checkMark.appendChild(polyline);
+                checkboxContainer.appendChild(checkMark);
+
+                checkboxContainer.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleSelect(thought.id);
+                };
+                itemDiv.appendChild(checkboxContainer);
 
                 // Paragraph for text with inline timestamp
                 const p = document.createElement('p');
                 p.style.whiteSpace = 'pre-wrap';
                 p.style.margin = '0 0 5px 0';
                 p.style.cursor = 'pointer';
+                p.style.paddingRight = '24px';
                 p.title = 'Click to edit or delete';
                 
                 // Add the text content
@@ -449,21 +800,22 @@
 
             visibleThoughts.forEach(t => {
                 const isFocused = t.id === focusedThoughtId;
+                const isSelected = selectedThoughtIds.has(t.id);
                 nodeList.push({
                     id: t.id,
                     label: truncateText(t.text, 25),
                     title: t.text,
                     color: {
-                        background: '#ffffff',
-                        border: isFocused ? '#111111' : '#cccccc',
+                        background: isSelected ? '#f5f3ff' : '#ffffff',
+                        border: isSelected ? '#818cf8' : (isFocused ? '#111111' : '#cccccc'),
                         highlight: {
-                            background: '#fcfcfc',
-                            border: '#111111'
+                            background: isSelected ? '#f5f3ff' : '#fcfcfc',
+                            border: isSelected ? '#4f46e5' : '#111111'
                         }
                     },
                     font: { color: '#000000', face: 'serif', size: 12 },
                     shape: 'box',
-                    borderWidth: isFocused ? 2 : 1,
+                    borderWidth: isSelected ? 2 : (isFocused ? 2 : 1),
                     margin: 6
                 });
 
@@ -847,6 +1199,242 @@
                 spawnSubmitBtn.click();
             }
         });
+
+        function toggleSelect(id) {
+            if (selectedThoughtIds.has(id)) {
+                selectedThoughtIds.delete(id);
+            } else {
+                selectedThoughtIds.add(id);
+            }
+            render();
+            renderGraph();
+            updateBulkActionsBar();
+        }
+
+        function updateBulkActionsBar() {
+            const count = selectedThoughtIds.size;
+            if (count > 0) {
+                selectedCountEl.textContent = count;
+                bulkActionsBar.style.bottom = '24px';
+            } else {
+                bulkActionsBar.style.bottom = '-100px';
+            }
+        }
+
+        // Apply hover colors to bulk actions buttons
+        function styleButtonHover(btn, bgNormal, bgHover, textNormal, textHover, borderNormal, borderHover) {
+            btn.style.backgroundColor = bgNormal;
+            btn.style.color = textNormal;
+            if (borderNormal) btn.style.borderColor = borderNormal;
+            btn.style.transition = 'all 0.2s ease';
+            
+            btn.onmouseover = () => {
+                btn.style.backgroundColor = bgHover;
+                btn.style.color = textHover;
+                if (borderHover) btn.style.borderColor = borderHover;
+                btn.style.transform = 'scale(1.02)';
+            };
+            btn.onmouseout = () => {
+                btn.style.backgroundColor = bgNormal;
+                btn.style.color = textNormal;
+                if (borderNormal) btn.style.borderColor = borderNormal;
+                btn.style.transform = 'scale(1)';
+            };
+        }
+
+        styleButtonHover(bulkReferNewBtn, '#4f46e5', '#4338ca', '#ffffff', '#ffffff');
+        styleButtonHover(bulkReferExistingBtn, '#ffffff', '#f8fafc', '#1e293b', '#0f172a', '#cbd5e1', '#94a3b8');
+        styleButtonHover(bulkClearBtn, 'transparent', 'transparent', '#64748b', '#334155');
+        styleButtonHover(document.getElementById('bulk-new-cancel-btn'), '#f1f5f9', '#e2e8f0', '#475569', '#334155');
+        styleButtonHover(document.getElementById('bulk-new-submit-btn'), '#4f46e5', '#4338ca', '#ffffff', '#ffffff');
+        styleButtonHover(document.getElementById('bulk-existing-cancel-btn'), '#f1f5f9', '#e2e8f0', '#475569', '#334155');
+        styleButtonHover(bulkExistingSubmitBtn, '#4f46e5', '#4338ca', '#ffffff', '#ffffff');
+
+        // Bulk clear handler
+        bulkClearBtn.onclick = () => {
+            selectedThoughtIds.clear();
+            render();
+            renderGraph();
+            updateBulkActionsBar();
+        };
+
+        // Bulk Refer to New Note Workflows
+        bulkReferNewBtn.onclick = () => {
+            const count = selectedThoughtIds.size;
+            document.getElementById('bulk-new-count').textContent = count;
+            bulkNewText.value = '';
+            bulkNewLabel.value = '';
+            bulkNewModal.style.display = 'flex';
+            bulkNewText.focus();
+        };
+
+        bulkNewCancelBtn.onclick = () => {
+            bulkNewModal.style.display = 'none';
+        };
+
+        bulkNewSubmitBtn.onclick = async () => {
+            const textVal = bulkNewText.value.trim();
+            const labelVal = bulkNewLabel.value.trim();
+            if (!textVal) return;
+            
+            const sourceIds = Array.from(selectedThoughtIds);
+            
+            try {
+                const response = await fetch('/api/add_and_link_multiple', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sourceIds: sourceIds,
+                        text: textVal,
+                        label: labelVal
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to save bulk thoughts');
+                
+                bulkNewModal.style.display = 'none';
+                selectedThoughtIds.clear();
+                updateBulkActionsBar();
+                showToast("New thought created and connections established!");
+                await loadThoughts();
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        };
+
+        bulkNewText.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.shiftKey) {
+                e.preventDefault();
+                bulkNewSubmitBtn.click();
+            }
+        });
+
+        // Bulk Refer to Existing Note Workflows
+        bulkReferExistingBtn.onclick = () => {
+            const count = selectedThoughtIds.size;
+            document.getElementById('bulk-existing-count').textContent = count;
+            bulkExistingSearch.value = '';
+            bulkExistingLabel.value = '';
+            
+            // Clear previous target selection
+            selectedExistingTargetId = null;
+            selectedTargetDisplay.style.display = 'none';
+            selectedTargetText.textContent = '';
+            bulkExistingSubmitBtn.style.opacity = '0.5';
+            bulkExistingSubmitBtn.style.pointerEvents = 'none';
+            
+            bulkExistingModal.style.display = 'flex';
+            bulkExistingSearch.focus();
+        };
+
+        bulkExistingCancelBtn.onclick = () => {
+            bulkExistingModal.style.display = 'none';
+        };
+
+        bulkExistingSearch.oninput = () => {
+            const query = bulkExistingSearch.value.trim().toLowerCase();
+            if (!query) {
+                bulkExistingSuggestions.style.display = 'none';
+                bulkExistingSuggestions.innerHTML = '';
+                return;
+            }
+            
+            // Filter thoughts (exclude selected nodes to avoid linking to oneself)
+            const matches = thoughts.filter(t => 
+                !selectedThoughtIds.has(t.id) && 
+                t.text.toLowerCase().includes(query)
+            );
+            
+            if (matches.length === 0) {
+                bulkExistingSuggestions.innerHTML = '<div style="padding: 8px 12px; color: #64748b; font-size: 0.9em; font-style: italic;">No matches found</div>';
+                bulkExistingSuggestions.style.display = 'block';
+                return;
+            }
+            
+            bulkExistingSuggestions.innerHTML = '';
+            matches.forEach(match => {
+                const item = document.createElement('div');
+                item.style.padding = '8px 12px';
+                item.style.cursor = 'pointer';
+                item.style.fontSize = '0.9em';
+                item.style.borderBottom = '1px solid #f1f5f9';
+                item.style.transition = 'background 0.2s';
+                
+                const textPreview = truncateText(match.text, 65);
+                const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                const highlightedText = textPreview.replace(new RegExp(`(${escapedQuery})`, 'gi'), '<strong style="color: #4f46e5;">$1</strong>');
+                
+                item.innerHTML = `
+                    <div style="font-weight: 500; color: #334155; margin-bottom: 2px;">${highlightedText}</div>
+                    <div style="font-size: 0.85em; color: #94a3b8;">(${match.time})</div>
+                `;
+                
+                item.onmouseover = () => { item.style.backgroundColor = '#f1f5f9'; };
+                item.onmouseout = () => { item.style.backgroundColor = 'transparent'; };
+                
+                item.onclick = () => {
+                    selectedExistingTargetId = match.id;
+                    selectedTargetText.textContent = truncateText(match.text, 45);
+                    selectedTargetDisplay.style.display = 'flex';
+                    bulkExistingSearch.value = '';
+                    bulkExistingSuggestions.style.display = 'none';
+                    bulkExistingSuggestions.innerHTML = '';
+                    
+                    // Enable connect button
+                    bulkExistingSubmitBtn.style.opacity = '1';
+                    bulkExistingSubmitBtn.style.pointerEvents = 'auto';
+                };
+                
+                bulkExistingSuggestions.appendChild(item);
+            });
+            
+            bulkExistingSuggestions.style.display = 'block';
+        };
+
+        clearTargetSelection.onclick = () => {
+            selectedExistingTargetId = null;
+            selectedTargetDisplay.style.display = 'none';
+            selectedTargetText.textContent = '';
+            
+            // Disable connect button
+            bulkExistingSubmitBtn.style.opacity = '0.5';
+            bulkExistingSubmitBtn.style.pointerEvents = 'none';
+        };
+
+        // Close autocomplete dropdown on click outside
+        document.addEventListener('click', (e) => {
+            if (e.target !== bulkExistingSearch && !bulkExistingSuggestions.contains(e.target)) {
+                bulkExistingSuggestions.style.display = 'none';
+            }
+        });
+
+        bulkExistingSubmitBtn.onclick = async () => {
+            if (!selectedExistingTargetId) return;
+            const labelVal = bulkExistingLabel.value.trim();
+            const sourceIds = Array.from(selectedThoughtIds);
+            
+            try {
+                const response = await fetch('/api/link_multiple', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sourceIds: sourceIds,
+                        targetId: selectedExistingTargetId,
+                        label: labelVal
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to connect thoughts');
+                
+                bulkExistingModal.style.display = 'none';
+                selectedThoughtIds.clear();
+                updateBulkActionsBar();
+                showToast("Connections to existing thought created!");
+                await loadThoughts();
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        };
 
         // Hash navigation
         window.addEventListener('hashchange', () => {
