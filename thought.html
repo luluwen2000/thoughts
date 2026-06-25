@@ -886,6 +886,13 @@
                     }
                 }
             });
+
+            network.on("doubleClick", function(params) {
+                if (params.nodes.length > 0) {
+                    const nodeId = params.nodes[0];
+                    focusOnThought(nodeId);
+                }
+            });
         }
 
         function focusOnThought(id) {
