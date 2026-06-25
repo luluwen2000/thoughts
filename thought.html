@@ -134,6 +134,41 @@
                 </div>
             </div>
             
+            <!-- Search Filter Bar -->
+            <div id="search-filter-bar" style="
+                display: none;
+                align-items: center;
+                justify-content: space-between;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 8px 16px;
+                margin-bottom: 15px;
+                font-size: 0.9em;
+                color: #334155;
+                font-family: serif;
+            ">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #64748b;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <span>Filtered by: <strong id="search-filter-word" style="background: #eeebff; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #4f46e5; font-family: sans-serif;"></strong> <span id="search-filter-count" style="color: #64748b; font-size: 0.9em; margin-left: 4px;"></span></span>
+                </div>
+                <button id="clear-search-btn" style="
+                    background: none;
+                    border: none;
+                    color: #475569;
+                    font-weight: bold;
+                    cursor: pointer;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                    transition: all 0.2s;
+                    font-family: serif;
+                " onmouseover="this.style.backgroundColor='#f1f5f9'" onmouseout="this.style.backgroundColor='transparent'">
+                    Clear
+                </button>
+            </div>
+            
             <div id="container"></div>
         </div>
 
@@ -524,6 +559,12 @@
         const bulkExistingCancelBtn = document.getElementById('bulk-existing-cancel-btn');
         const bulkExistingSubmitBtn = document.getElementById('bulk-existing-submit-btn');
 
+        // Search filter elements
+        const searchFilterBar = document.getElementById('search-filter-bar');
+        const searchFilterWord = document.getElementById('search-filter-word');
+        const searchFilterCount = document.getElementById('search-filter-count');
+        const clearSearchBtn = document.getElementById('clear-search-btn');
+
         // State variables
         let thoughts = [];
         let network = null;
@@ -532,6 +573,28 @@
         let selectedExistingTargetId = null;
         let previousFocusedThoughtId = null;
         let currentSortOrder = 'votes';
+        let currentSearchQuery = null;
+
+        // Search helper functions
+        function cleanWord(word) {
+            if (!word) return '';
+            return word.replace(/^[^a-zA-Z0-9#_]+|[^a-zA-Z0-9_]+$/g, '').toLowerCase();
+        }
+
+        function searchWord(word) {
+            const cleaned = cleanWord(word);
+            if (!cleaned) return;
+            currentSearchQuery = cleaned;
+            render();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function clearSearch() {
+            currentSearchQuery = null;
+            render();
+        }
+
+        clearSearchBtn.onclick = clearSearch;
 
         function sortThoughts() {
             if (currentSortOrder === 'votes') {
@@ -613,7 +676,7 @@
                 const response = await fetch('/api/thoughts');
                 if (!response.ok) throw new Error('Failed to fetch thoughts');
                 thoughts = await response.json();
-                thoughts.sort((a, b) => (b.votes || 0) - (a.votes || 0));
+                sortThoughts();
                 
                 focusedThoughtId = getFocusedThoughtId();
                 
@@ -636,6 +699,14 @@
 
         // Render thoughts in the container exactly styled like the original
         function render() {
+            // Update search filter bar visibility and content
+            if (currentSearchQuery) {
+                searchFilterBar.style.display = 'flex';
+                searchFilterWord.textContent = currentSearchQuery;
+            } else {
+                searchFilterBar.style.display = 'none';
+            }
+
             container.innerHTML = '';
             
             if (thoughts.length === 0) {
@@ -643,7 +714,24 @@
                 return;
             }
 
-            thoughts.forEach(thought => {
+            // Filter thoughts if search is active
+            let thoughtsToRender = thoughts;
+            if (currentSearchQuery) {
+                thoughtsToRender = thoughts.filter(thought => {
+                    const cleanedWords = thought.text.split(/\s+/).map(cleanWord);
+                    return cleanedWords.includes(currentSearchQuery);
+                });
+                searchFilterCount.textContent = `(${thoughtsToRender.length} match${thoughtsToRender.length === 1 ? '' : 'es'})`;
+            }
+
+            if (thoughtsToRender.length === 0) {
+                container.innerHTML = currentSearchQuery 
+                    ? '<p style="color: #64748b; font-style: italic; padding: 20px 0;">No thoughts contain the word "' + currentSearchQuery + '".</p>'
+                    : '<p>No thoughts recorded yet.</p>';
+                return;
+            }
+
+            thoughtsToRender.forEach(thought => {
                 const isFocused = thought.id === focusedThoughtId;
 
                 const itemDiv = document.createElement('div');
@@ -845,8 +933,54 @@
                 p.style.paddingRight = '24px';
                 p.title = 'Click to edit or delete';
                 
-                // Add the text content
-                p.textContent = thought.text + ' ';
+                // Add the text content word by word to support click-to-search and highlights
+                const tokens = thought.text.split(/(\s+)/);
+                tokens.forEach(token => {
+                    if (/\s+/.test(token)) {
+                        p.appendChild(document.createTextNode(token));
+                    } else if (token) {
+                        const wordSpan = document.createElement('span');
+                        wordSpan.textContent = token;
+                        
+                        const cleanedWord = cleanWord(token);
+                        if (cleanedWord) {
+                            wordSpan.style.cursor = 'pointer';
+                            wordSpan.style.borderRadius = '3px';
+                            wordSpan.style.padding = '1px 2px';
+                            wordSpan.style.margin = '0 -2px';
+                            wordSpan.style.transition = 'all 0.15s ease';
+
+                            const isMatch = currentSearchQuery && (cleanedWord === currentSearchQuery);
+
+                            if (isMatch) {
+                                wordSpan.style.backgroundColor = '#fde047'; // Yellow background highlight
+                                wordSpan.style.color = '#000000';
+                            }
+
+                            // Add hover styling matching premium theme
+                            wordSpan.onmouseenter = () => {
+                                wordSpan.style.backgroundColor = isMatch ? '#facc15' : '#eeebff';
+                                wordSpan.style.color = isMatch ? '#000000' : '#4f46e5';
+                            };
+                            wordSpan.onmouseleave = () => {
+                                wordSpan.style.backgroundColor = isMatch ? '#fde047' : 'transparent';
+                                wordSpan.style.color = isMatch ? '#000000' : '';
+                            };
+
+                            // Clicking a word triggers search
+                            wordSpan.onclick = (e) => {
+                                e.stopPropagation();
+                                searchWord(token);
+                            };
+                        } else {
+                            wordSpan.style.cursor = 'inherit';
+                        }
+                        p.appendChild(wordSpan);
+                    }
+                });
+
+                // Add space before timestamp
+                p.appendChild(document.createTextNode(' '));
 
                 // Append the time inline inside a small span
                 const timeSpan = document.createElement('span');
