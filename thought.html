@@ -816,6 +816,20 @@
                 voteCol.appendChild(scoreText);
                 voteCol.appendChild(downBtn);
 
+                // Reference count indicator
+                const refCountVal = thought.inputs ? thought.inputs.length : 0;
+                const refCountEl = document.createElement('div');
+                refCountEl.style.display = 'flex';
+                refCountEl.style.alignItems = 'center';
+                refCountEl.style.justifyContent = 'center';
+                refCountEl.style.fontSize = '0.75em';
+                refCountEl.style.color = '#64748b';
+                refCountEl.style.marginTop = '8px';
+                refCountEl.style.gap = '3px';
+                refCountEl.title = `Referred by ${refCountVal} thoughts`;
+                refCountEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> <span>${refCountVal}</span>`;
+                voteCol.appendChild(refCountEl);
+
                 // Column 2 (Right): Content panel
                 const contentCol = document.createElement('div');
                 contentCol.style.flex = '1';
