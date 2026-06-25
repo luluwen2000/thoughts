@@ -804,15 +804,15 @@
                         actionsDiv.appendChild(marker);
                     }
                 } else {
-                    const spawnBtn = document.createElement('button');
-                    spawnBtn.textContent = 'Spawn';
-                    spawnBtn.onclick = () => openModal(thought.id, thought.text, 'spawn');
-                    actionsDiv.appendChild(spawnBtn);
+                    const referToBtn = document.createElement('button');
+                    referToBtn.textContent = 'Refer To';
+                    referToBtn.onclick = () => openModal(thought.id, thought.text, 'spawn');
+                    actionsDiv.appendChild(referToBtn);
 
-                    const referBtn = document.createElement('button');
-                    referBtn.textContent = 'Refer';
-                    referBtn.onclick = () => openModal(thought.id, thought.text, 'refer');
-                    actionsDiv.appendChild(referBtn);
+                    const referFromBtn = document.createElement('button');
+                    referFromBtn.textContent = 'Refer From';
+                    referFromBtn.onclick = () => openModal(thought.id, thought.text, 'refer');
+                    actionsDiv.appendChild(referFromBtn);
 
                     const linkBtn = document.createElement('button');
                     linkBtn.textContent = 'Link';
@@ -1197,7 +1197,7 @@
                 spawnExistingSearch.disabled = true;
                 spawnExistingSearch.placeholder = "(Clear new note text to select existing note)";
                 
-                spawnSubmitBtn.textContent = (activeModalMode === 'spawn') ? 'Spawn' : 'Create';
+                spawnSubmitBtn.textContent = 'Create & Link';
                 spawnSubmitBtn.style.opacity = '1';
                 spawnSubmitBtn.style.pointerEvents = 'auto';
             } else if (hasExistingSelected) {
@@ -1214,12 +1214,12 @@
                 spawnExistingSearch.placeholder = "Type to search thoughts...";
                 spawnText.disabled = false;
                 if (activeModalMode === 'spawn') {
-                    spawnText.placeholder = "Write next thought...";
+                    spawnText.placeholder = "Write new target note...";
                 } else {
-                    spawnText.placeholder = "Write referring thought...";
+                    spawnText.placeholder = "Write new source note...";
                 }
 
-                spawnSubmitBtn.textContent = (activeModalMode === 'spawn') ? 'Spawn' : 'Create';
+                spawnSubmitBtn.textContent = 'Create & Link';
                 spawnSubmitBtn.style.opacity = '0.5';
                 spawnSubmitBtn.style.pointerEvents = 'none';
             }
@@ -1237,15 +1237,15 @@
             const textLabelEl = document.getElementById('modal-text-label');
 
             if (mode === 'spawn') {
-                titleEl.textContent = 'Spawn Connected Thought';
-                previewLabelEl.textContent = 'Parent';
-                textLabelEl.textContent = 'New Thought Content';
-                spawnDirectionPreview.textContent = 'This thought ➔ [Target Note]';
+                titleEl.textContent = 'Refer this Note To';
+                previewLabelEl.textContent = 'Source Note';
+                textLabelEl.textContent = 'New Target Note Content';
+                spawnDirectionPreview.textContent = 'This note ➔ [Target Note]';
             } else {
-                titleEl.textContent = 'Create Thought Referring to';
-                previewLabelEl.textContent = 'Target';
-                textLabelEl.textContent = 'New Referring Thought Content';
-                spawnDirectionPreview.textContent = '[Target Note] ➔ This thought';
+                titleEl.textContent = 'Refer to this Note From';
+                previewLabelEl.textContent = 'Target Note';
+                textLabelEl.textContent = 'New Source Note Content';
+                spawnDirectionPreview.textContent = '[Source Note] ➔ This note';
             }
 
             parentPreview.textContent = truncateText(text, 40);
