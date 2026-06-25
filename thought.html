@@ -414,6 +414,7 @@
         let spawningParentId = null;
         let selectedThoughtIds = new Set();
         let selectedExistingTargetId = null;
+        let previousFocusedThoughtId = null;
 
         // Routing helper
         function getFocusedThoughtId() {
@@ -801,21 +802,44 @@
             visibleThoughts.forEach(t => {
                 const isFocused = t.id === focusedThoughtId;
                 const isSelected = selectedThoughtIds.has(t.id);
+                const isPrevious = t.id === previousFocusedThoughtId;
+
+                let bgVal = '#ffffff';
+                let borderVal = '#cccccc';
+                let borderW = 1;
+
+                if (isSelected) {
+                    bgVal = '#f5f3ff';
+                    borderVal = '#818cf8';
+                    borderW = 2;
+                } else if (isFocused) {
+                    bgVal = '#ffffff';
+                    borderVal = '#111111';
+                    borderW = 2;
+                } else if (isPrevious) {
+                    bgVal = '#fffbeb';
+                    borderVal = '#f59e0b';
+                    borderW = 1.5;
+                }
+
                 nodeList.push({
                     id: t.id,
                     label: truncateText(t.text, 25),
                     title: t.text,
                     color: {
-                        background: isSelected ? '#f5f3ff' : '#ffffff',
-                        border: isSelected ? '#818cf8' : (isFocused ? '#111111' : '#cccccc'),
+                        background: bgVal,
+                        border: borderVal,
                         highlight: {
-                            background: isSelected ? '#f5f3ff' : '#fcfcfc',
-                            border: isSelected ? '#4f46e5' : '#111111'
+                            background: isSelected ? '#f5f3ff' : (isPrevious ? '#fffbeb' : '#fcfcfc'),
+                            border: isSelected ? '#4f46e5' : (isPrevious ? '#d97706' : '#111111')
                         }
                     },
                     font: { color: '#000000', face: 'serif', size: 12 },
                     shape: 'box',
-                    borderWidth: isSelected ? 2 : (isFocused ? 2 : 1),
+                    borderWidth: borderW,
+                    shapeProperties: {
+                        borderDashes: isPrevious ? [4, 4] : false
+                    },
                     margin: 6
                 });
 
@@ -870,39 +894,27 @@
             network.on("click", function(params) {
                 if (params.nodes.length > 0) {
                     const nodeId = params.nodes[0];
-                    const targetCard = document.getElementById(`thought-${nodeId}`);
-                    if (targetCard) {
-                        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        
-                        // Temporarily highlight card in feed
-                        const originalBorder = targetCard.style.border;
-                        const originalBg = targetCard.style.backgroundColor;
-                        targetCard.style.border = '1px solid #111111';
-                        targetCard.style.backgroundColor = '#eaeaea';
-                        setTimeout(() => {
-                            targetCard.style.border = originalBorder;
-                            targetCard.style.backgroundColor = originalBg;
-                        }, 1500);
-                    }
-                }
-            });
-
-            network.on("doubleClick", function(params) {
-                if (params.nodes.length > 0) {
-                    const nodeId = params.nodes[0];
                     focusOnThought(nodeId);
                 }
             });
         }
 
-        function focusOnThought(id) {
+        function setFocus(id) {
+            if (focusedThoughtId && focusedThoughtId !== id) {
+                previousFocusedThoughtId = focusedThoughtId;
+            }
             focusedThoughtId = id;
             window.location.hash = `/${id}`;
+        }
+
+        function focusOnThought(id) {
+            setFocus(id);
             loadThoughts();
         }
 
         resetGraphBtn.onclick = () => {
             focusedThoughtId = null;
+            previousFocusedThoughtId = null;
             history.pushState("", document.title, window.location.pathname);
             loadThoughts();
         };
@@ -960,8 +972,7 @@
         // Edit inline function
         function startEdit(id, originalText, itemDiv, p) {
             // Set focused thought so that the network graph renders it and neighbors
-            focusedThoughtId = id;
-            window.location.hash = `/${id}`;
+            setFocus(id);
             renderGraph();
 
             // Set card styles to reflect selection
