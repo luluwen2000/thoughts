@@ -2,10 +2,11 @@ import os
 import json
 import datetime
 import uuid
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, redirect, make_response
 
 app = Flask(__name__, static_folder='.')
-FILE_NAME = 'thoughts.json'
+DATA_DIR = os.environ.get('DATA_DIR', '.')
+FILE_NAME = os.path.join(DATA_DIR, 'thoughts.json')
 
 def load_data():
     if os.path.exists(FILE_NAME):
@@ -39,8 +40,127 @@ def load_data():
     return data
 
 def save_data(data):
+    os.makedirs(os.path.dirname(FILE_NAME), exist_ok=True)
     with open(FILE_NAME, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
+
+def serve_login_page(error=None):
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Thoughts - Lock Screen</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {
+                background: linear-gradient(135deg, #0f172a, #1e1b4b);
+                color: #f8fafc;
+                font-family: serif;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+            }
+            .lock-container {
+                background: rgba(255, 255, 255, 0.03);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 16px;
+                padding: 32px;
+                width: 90%;
+                max-width: 360px;
+                text-align: center;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            }
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 24px;
+                color: #e2e8f0;
+            }
+            input {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 8px;
+                color: #fff;
+                box-sizing: border-box;
+                font-size: 1.1em;
+                text-align: center;
+                margin-bottom: 16px;
+                transition: border-color 0.2s;
+            }
+            input:focus {
+                outline: none;
+                border-color: #818cf8;
+            }
+            button {
+                background: #4f46e5;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 1em;
+                cursor: pointer;
+                width: 100%;
+                transition: background 0.2s;
+            }
+            button:hover {
+                background: #4338ca;
+            }
+            .error-msg {
+                color: #ef4444;
+                font-size: 0.9em;
+                margin-bottom: 12px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="lock-container">
+            <h1>Thoughts Lock Screen</h1>
+            <form method="POST" action="/login">
+                <input type="password" name="password" placeholder="Enter magic word" autofocus required>
+                """ + (f'<div class="error-msg">{error}</div>' if error else '') + """
+                <button type="submit">Unlock</button>
+            </form>
+        </div>
+    </body>
+    </html>
+    """
+
+@app.before_request
+def check_auth():
+    magic_word = os.environ.get('MAGIC_WORD')
+    if not magic_word:
+        return
+    
+    # Allow login endpoint and static files if any
+    if request.path == '/login' or request.path.startswith('/static/'):
+        return
+        
+    magic_cookie = request.cookies.get('magic_word')
+    if magic_cookie != magic_word:
+        if request.path.startswith('/api/'):
+            return jsonify({'status': 'unauthorized'}), 401
+        return serve_login_page()
+
+@app.route('/login', methods=['POST'])
+def login():
+    password = request.form.get('password')
+    correct_password = os.environ.get('MAGIC_WORD')
+    
+    if not correct_password:
+        return redirect('/')
+        
+    if password == correct_password:
+        resp = make_response(redirect('/'))
+        is_secure = request.is_secure or os.environ.get('DATA_DIR') is not None
+        resp.set_cookie('magic_word', password, max_age=30*24*60*60, httponly=True, samesite='Lax', secure=is_secure)
+        return resp
+    else:
+        return serve_login_page(error="Invalid magic word")
 
 @app.route('/')
 def home():

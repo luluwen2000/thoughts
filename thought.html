@@ -514,6 +514,17 @@
     <div id="toast-el" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #333333; color: #ffffff; padding: 8px 16px; border-radius: 4px; font-size: 0.9em; font-family: serif; transition: transform 0.3s; z-index: 2000; pointer-events: none;">Link copied to clipboard!</div>
 
     <script>
+        // Global fetch interceptor to handle 401 Unauthorized (magic word session expired)
+        const _originalFetch = window.fetch;
+        window.fetch = async (...args) => {
+            const response = await _originalFetch(...args);
+            if (response.status === 401) {
+                window.location.reload();
+                return new Promise(() => {}); // Stop downstream code execution
+            }
+            return response;
+        };
+
         const container = document.getElementById('container');
         const resetGraphBtn = document.getElementById('reset-graph-btn');
         const toastEl = document.getElementById('toast-el');
