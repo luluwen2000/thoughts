@@ -1,5 +1,5 @@
 # fly.toml app configuration file
-app = "luluwen2000-thoughts"
+app = "kevlu-thoughts"
 primary_region = "sea"
 
 [http_service]
