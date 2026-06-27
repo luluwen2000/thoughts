@@ -1,20 +1,27 @@
-# fly.toml app configuration file
-app = "luluwen2000-thoughts"
-primary_region = "sea"
+# fly.toml app configuration file generated for kevlu-thoughts on 2026-06-27T07:41:23Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'kevlu-thoughts'
+primary_region = 'sjc'
+
+[build]
+
+[[mounts]]
+  source = 'thoughts_data'
+  destination = '/data'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
-
-[mounts]
-  source = "thoughts_data"
-  destination = "/data"
+  processes = ['app']
 
 [[vm]]
-  memory = "256mb"
-  cpu_kind = "shared"
+  memory = '256mb'
+  cpu_kind = 'shared'
   cpus = 1
+  memory_mb = 256
